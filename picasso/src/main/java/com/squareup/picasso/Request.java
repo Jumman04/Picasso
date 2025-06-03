@@ -15,23 +15,22 @@
  */
 package com.squareup.picasso;
 
+import static java.util.Collections.unmodifiableList;
+
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.view.Gravity;
 
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Px;
 
-import android.view.Gravity;
-
 import com.squareup.picasso.Picasso.Priority;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import static java.util.Collections.unmodifiableList;
 
 /**
  * Immutable data about an image and the transformations that will be applied to it.
@@ -125,11 +124,7 @@ public final class Request {
      */
     int networkPolicy;
 
-    private Request(Uri uri, int resourceId, String stableKey, List<Transformation> transformations,
-                    int targetWidth, int targetHeight, boolean centerCrop, boolean centerInside,
-                    int centerCropGravity, boolean onlyScaleDown, float rotationDegrees,
-                    float rotationPivotX, float rotationPivotY, boolean hasRotationPivot,
-                    boolean purgeable, Bitmap.Config config, Priority priority) {
+    private Request(Uri uri, int resourceId, String stableKey, List<Transformation> transformations, int targetWidth, int targetHeight, boolean centerCrop, boolean centerInside, int centerCropGravity, boolean onlyScaleDown, float rotationDegrees, float rotationPivotX, float rotationPivotY, boolean hasRotationPivot, boolean purgeable, Bitmap.Config config, Priority priority) {
         this.uri = uri;
         this.resourceId = resourceId;
         this.stableKey = stableKey;
@@ -153,6 +148,7 @@ public final class Request {
         this.priority = priority;
     }
 
+    @NonNull
     @Override
     public String toString() {
         final StringBuilder builder = new StringBuilder("Request{");
@@ -317,9 +313,6 @@ public final class Request {
          * This will clear an image resource ID if one is set.
          */
         public Builder setUri(@NonNull Uri uri) {
-            if (uri == null) {
-                throw new IllegalArgumentException("Image URI may not be null.");
-            }
             this.uri = uri;
             this.resourceId = 0;
             return this;
@@ -489,9 +482,6 @@ public final class Request {
          * Decode the image using the specified config.
          */
         public Builder config(@NonNull Bitmap.Config config) {
-            if (config == null) {
-                throw new IllegalArgumentException("config == null");
-            }
             this.config = config;
             return this;
         }
@@ -500,9 +490,6 @@ public final class Request {
          * Execute request using the specified priority.
          */
         public Builder priority(@NonNull Priority priority) {
-            if (priority == null) {
-                throw new IllegalArgumentException("Priority invalid.");
-            }
             if (this.priority != null) {
                 throw new IllegalStateException("Priority already set.");
             }
@@ -516,9 +503,6 @@ public final class Request {
          * Custom transformations will always be run after the built-in transformations.
          */
         public Builder transform(@NonNull Transformation transformation) {
-            if (transformation == null) {
-                throw new IllegalArgumentException("Transformation must not be null.");
-            }
             if (transformation.key() == null) {
                 throw new IllegalArgumentException("Transformation key must not be null.");
             }
@@ -535,9 +519,6 @@ public final class Request {
          * Custom transformations will always be run after the built-in transformations.
          */
         public Builder transform(@NonNull List<? extends Transformation> transformations) {
-            if (transformations == null) {
-                throw new IllegalArgumentException("Transformation list must not be null.");
-            }
             for (int i = 0, size = transformations.size(); i < size; i++) {
                 transform(transformations.get(i));
             }
@@ -552,19 +533,15 @@ public final class Request {
                 throw new IllegalStateException("Center crop and center inside can not be used together.");
             }
             if (centerCrop && (targetWidth == 0 && targetHeight == 0)) {
-                throw new IllegalStateException(
-                        "Center crop requires calling resize with positive width and height.");
+                throw new IllegalStateException("Center crop requires calling resize with positive width and height.");
             }
             if (centerInside && (targetWidth == 0 && targetHeight == 0)) {
-                throw new IllegalStateException(
-                        "Center inside requires calling resize with positive width and height.");
+                throw new IllegalStateException("Center inside requires calling resize with positive width and height.");
             }
             if (priority == null) {
                 priority = Priority.NORMAL;
             }
-            return new Request(uri, resourceId, stableKey, transformations, targetWidth, targetHeight,
-                    centerCrop, centerInside, centerCropGravity, onlyScaleDown, rotationDegrees,
-                    rotationPivotX, rotationPivotY, hasRotationPivot, purgeable, config, priority);
+            return new Request(uri, resourceId, stableKey, transformations, targetWidth, targetHeight, centerCrop, centerInside, centerCropGravity, onlyScaleDown, rotationDegrees, rotationPivotX, rotationPivotY, hasRotationPivot, purgeable, config, priority);
         }
     }
 }

@@ -15,6 +15,9 @@
  */
 package com.squareup.picasso;
 
+import static android.graphics.Color.WHITE;
+import static com.squareup.picasso.Picasso.LoadedFrom.MEMORY;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -28,9 +31,6 @@ import android.graphics.drawable.Drawable;
 import android.os.SystemClock;
 import android.widget.ImageView;
 
-import static android.graphics.Color.WHITE;
-import static com.squareup.picasso.Picasso.LoadedFrom.MEMORY;
-
 final class PicassoDrawable extends BitmapDrawable {
     // Only accessed from main thread.
     private static final Paint DEBUG_PAINT = new Paint();
@@ -42,8 +42,8 @@ final class PicassoDrawable extends BitmapDrawable {
     long startTimeMillis;
     boolean animating;
     int alpha = 0xFF;
-    PicassoDrawable(Context context, Bitmap bitmap, Drawable placeholder,
-                    Picasso.LoadedFrom loadedFrom, boolean noFade, boolean debugging) {
+
+    PicassoDrawable(Context context, Bitmap bitmap, Drawable placeholder, Picasso.LoadedFrom loadedFrom, boolean noFade, boolean debugging) {
         super(context.getResources(), bitmap);
 
         this.debugging = debugging;
@@ -63,14 +63,12 @@ final class PicassoDrawable extends BitmapDrawable {
      * Create or update the drawable on the target {@link ImageView} to display the supplied bitmap
      * image.
      */
-    static void setBitmap(ImageView target, Context context, Bitmap bitmap,
-                          Picasso.LoadedFrom loadedFrom, boolean noFade, boolean debugging) {
+    static void setBitmap(ImageView target, Context context, Bitmap bitmap, Picasso.LoadedFrom loadedFrom, boolean noFade, boolean debugging) {
         Drawable placeholder = target.getDrawable();
         if (placeholder instanceof Animatable) {
             ((Animatable) placeholder).stop();
         }
-        PicassoDrawable drawable =
-                new PicassoDrawable(context, bitmap, placeholder, loadedFrom, noFade, debugging);
+        PicassoDrawable drawable = new PicassoDrawable(context, bitmap, placeholder, loadedFrom, noFade, debugging);
         target.setImageDrawable(drawable);
     }
 

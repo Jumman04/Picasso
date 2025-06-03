@@ -15,29 +15,6 @@
  */
 package com.squareup.picasso;
 
-import android.app.Notification;
-import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
-import android.os.Build;
-
-import androidx.annotation.DrawableRes;
-import androidx.annotation.IdRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
-
-import android.util.TypedValue;
-import android.view.Gravity;
-import android.widget.ImageView;
-import android.widget.RemoteViews;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import static com.squareup.picasso.BitmapHunter.forRequest;
 import static com.squareup.picasso.MemoryPolicy.shouldReadFromMemoryCache;
 import static com.squareup.picasso.Picasso.LoadedFrom.MEMORY;
@@ -54,6 +31,27 @@ import static com.squareup.picasso.Utils.checkMain;
 import static com.squareup.picasso.Utils.checkNotMain;
 import static com.squareup.picasso.Utils.createKey;
 import static com.squareup.picasso.Utils.log;
+
+import android.app.Notification;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
+import android.view.Gravity;
+import android.widget.ImageView;
+import android.widget.RemoteViews;
+
+import androidx.annotation.DrawableRes;
+import androidx.annotation.IdRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
+import androidx.appcompat.content.res.AppCompatResources;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Fluent API for building an image download request.
@@ -78,8 +76,7 @@ public class RequestCreator {
 
     RequestCreator(Picasso picasso, Uri uri, int resourceId) {
         if (picasso.shutdown) {
-            throw new IllegalStateException(
-                    "Picasso instance already shut down. Cannot submit new requests.");
+            throw new IllegalStateException("Picasso instance already shut down. Cannot submit new requests.");
         }
         this.picasso = picasso;
         this.data = new Request.Builder(uri, resourceId, picasso.defaultBitmapConfig);
@@ -165,9 +162,6 @@ public class RequestCreator {
      * An error drawable to be used if the request image could not be loaded.
      */
     public RequestCreator error(@NonNull Drawable errorDrawable) {
-        if (errorDrawable == null) {
-            throw new IllegalArgumentException("Error image may not be null.");
-        }
         if (errorResId != 0) {
             throw new IllegalStateException("Error image already set.");
         }
@@ -184,7 +178,7 @@ public class RequestCreator {
      * define the scope of your requests within your app such as a
      * {@link android.content.Context}, an {@link android.app.Activity}, or a
      * {@link android.app.Fragment}.
-     *
+     * <p>
      * <strong>WARNING:</strong>: Picasso will keep a reference to the tag for
      * as long as this tag is paused and/or has active requests. Look out for
      * potential leaks.
@@ -194,9 +188,6 @@ public class RequestCreator {
      * @see Picasso#resumeTag(Object)
      */
     public RequestCreator tag(@NonNull Object tag) {
-        if (tag == null) {
-            throw new IllegalArgumentException("Tag invalid.");
-        }
         if (this.tag != null) {
             throw new IllegalStateException("Tag already set.");
         }
@@ -226,9 +217,8 @@ public class RequestCreator {
     /**
      * Internal use only. Used by {@link DeferredRequestCreator}.
      */
-    RequestCreator clearTag() {
+    void clearTag() {
         this.tag = null;
-        return this;
     }
 
     /**
@@ -367,22 +357,13 @@ public class RequestCreator {
      * Specifies the {@link MemoryPolicy} to use for this request. You may specify additional policy
      * options using the varargs parameter.
      */
-    public RequestCreator memoryPolicy(@NonNull MemoryPolicy policy,
-                                       @NonNull MemoryPolicy... additional) {
-        if (policy == null) {
-            throw new IllegalArgumentException("Memory policy cannot be null.");
-        }
+    public RequestCreator memoryPolicy(@NonNull MemoryPolicy policy, @NonNull MemoryPolicy... additional) {
         this.memoryPolicy |= policy.index;
-        if (additional == null) {
-            throw new IllegalArgumentException("Memory policy cannot be null.");
-        }
-        if (additional.length > 0) {
-            for (MemoryPolicy memoryPolicy : additional) {
-                if (memoryPolicy == null) {
-                    throw new IllegalArgumentException("Memory policy cannot be null.");
-                }
-                this.memoryPolicy |= memoryPolicy.index;
+        for (MemoryPolicy memoryPolicy : additional) {
+            if (memoryPolicy == null) {
+                throw new IllegalArgumentException("Memory policy cannot be null.");
             }
+            this.memoryPolicy |= memoryPolicy.index;
         }
         return this;
     }
@@ -391,22 +372,13 @@ public class RequestCreator {
      * Specifies the {@link NetworkPolicy} to use for this request. You may specify additional policy
      * options using the varargs parameter.
      */
-    public RequestCreator networkPolicy(@NonNull NetworkPolicy policy,
-                                        @NonNull NetworkPolicy... additional) {
-        if (policy == null) {
-            throw new IllegalArgumentException("Network policy cannot be null.");
-        }
+    public RequestCreator networkPolicy(@NonNull NetworkPolicy policy, @NonNull NetworkPolicy... additional) {
         this.networkPolicy |= policy.index;
-        if (additional == null) {
-            throw new IllegalArgumentException("Network policy cannot be null.");
-        }
-        if (additional.length > 0) {
-            for (NetworkPolicy networkPolicy : additional) {
-                if (networkPolicy == null) {
-                    throw new IllegalArgumentException("Network policy cannot be null.");
-                }
-                this.networkPolicy |= networkPolicy.index;
+        for (NetworkPolicy networkPolicy : additional) {
+            if (networkPolicy == null) {
+                throw new IllegalArgumentException("Network policy cannot be null.");
             }
+            this.networkPolicy |= networkPolicy.index;
         }
         return this;
     }
@@ -502,8 +474,7 @@ public class RequestCreator {
                 }
             }
 
-            Action action =
-                    new FetchAction(picasso, request, memoryPolicy, networkPolicy, tag, key, callback);
+            Action action = new FetchAction(picasso, request, memoryPolicy, networkPolicy, tag, key, callback);
             picasso.submit(action);
         }
     }
@@ -557,9 +528,6 @@ public class RequestCreator {
         long started = System.nanoTime();
         checkMain();
 
-        if (target == null) {
-            throw new IllegalArgumentException("Target must not be null.");
-        }
         if (deferred) {
             throw new IllegalStateException("Fit cannot be used with a Target.");
         }
@@ -584,9 +552,7 @@ public class RequestCreator {
 
         target.onPrepareLoad(setPlaceholder ? getPlaceholderDrawable() : null);
 
-        Action action =
-                new TargetAction(picasso, target, request, memoryPolicy, networkPolicy, errorDrawable,
-                        requestKey, tag, errorResId);
+        Action action = new TargetAction(picasso, target, request, memoryPolicy, networkPolicy, errorDrawable, requestKey, tag, errorResId);
         picasso.enqueueAndSubmit(action);
     }
 
@@ -594,8 +560,7 @@ public class RequestCreator {
      * Asynchronously fulfills the request into the specified {@link RemoteViews} object with the
      * given {@code viewId}. This is used for loading bitmaps into a {@link Notification}.
      */
-    public void into(@NonNull RemoteViews remoteViews, @IdRes int viewId, int notificationId,
-                     @NonNull Notification notification) {
+    public void into(@NonNull RemoteViews remoteViews, @IdRes int viewId, int notificationId, @NonNull Notification notification) {
         into(remoteViews, viewId, notificationId, notification, null);
     }
 
@@ -603,8 +568,7 @@ public class RequestCreator {
      * Asynchronously fulfills the request into the specified {@link RemoteViews} object with the
      * given {@code viewId}. This is used for loading bitmaps into a {@link Notification}.
      */
-    public void into(@NonNull RemoteViews remoteViews, @IdRes int viewId, int notificationId,
-                     @NonNull Notification notification, @Nullable String notificationTag) {
+    public void into(@NonNull RemoteViews remoteViews, @IdRes int viewId, int notificationId, @NonNull Notification notification, @Nullable String notificationTag) {
         into(remoteViews, viewId, notificationId, notification, notificationTag, null);
     }
 
@@ -612,30 +576,20 @@ public class RequestCreator {
      * Asynchronously fulfills the request into the specified {@link RemoteViews} object with the
      * given {@code viewId}. This is used for loading bitmaps into a {@link Notification}.
      */
-    public void into(@NonNull RemoteViews remoteViews, @IdRes int viewId, int notificationId,
-                     @NonNull Notification notification, @Nullable String notificationTag, Callback callback) {
+    public void into(@NonNull RemoteViews remoteViews, @IdRes int viewId, int notificationId, @NonNull Notification notification, @Nullable String notificationTag, Callback callback) {
         long started = System.nanoTime();
 
-        if (remoteViews == null) {
-            throw new IllegalArgumentException("RemoteViews must not be null.");
-        }
-        if (notification == null) {
-            throw new IllegalArgumentException("Notification must not be null.");
-        }
         if (deferred) {
             throw new IllegalStateException("Fit cannot be used with RemoteViews.");
         }
         if (placeholderDrawable != null || placeholderResId != 0 || errorDrawable != null) {
-            throw new IllegalArgumentException(
-                    "Cannot use placeholder or error drawables with remote views.");
+            throw new IllegalArgumentException("Cannot use placeholder or error drawables with remote views.");
         }
 
         Request request = createRequest(started);
         String key = createKey(request, new StringBuilder()); // Non-main thread needs own builder.
 
-        RemoteViewsAction action =
-                new NotificationAction(picasso, request, remoteViews, viewId, notificationId, notification,
-                        notificationTag, memoryPolicy, networkPolicy, key, tag, errorResId, callback);
+        RemoteViewsAction action = new NotificationAction(picasso, request, remoteViews, viewId, notificationId, notification, notificationTag, memoryPolicy, networkPolicy, key, tag, errorResId, callback);
 
         performRemoteViewInto(action);
     }
@@ -644,8 +598,7 @@ public class RequestCreator {
      * Asynchronously fulfills the request into the specified {@link RemoteViews} object with the
      * given {@code viewId}. This is used for loading bitmaps into all instances of a widget.
      */
-    public void into(@NonNull RemoteViews remoteViews, @IdRes int viewId,
-                     @NonNull int[] appWidgetIds) {
+    public void into(@NonNull RemoteViews remoteViews, @IdRes int viewId, @NonNull int[] appWidgetIds) {
         into(remoteViews, viewId, appWidgetIds, null);
     }
 
@@ -653,30 +606,20 @@ public class RequestCreator {
      * Asynchronously fulfills the request into the specified {@link RemoteViews} object with the
      * given {@code viewId}. This is used for loading bitmaps into all instances of a widget.
      */
-    public void into(@NonNull RemoteViews remoteViews, @IdRes int viewId, @NonNull int[] appWidgetIds,
-                     Callback callback) {
+    public void into(@NonNull RemoteViews remoteViews, @IdRes int viewId, @NonNull int[] appWidgetIds, Callback callback) {
         long started = System.nanoTime();
 
-        if (remoteViews == null) {
-            throw new IllegalArgumentException("remoteViews must not be null.");
-        }
-        if (appWidgetIds == null) {
-            throw new IllegalArgumentException("appWidgetIds must not be null.");
-        }
         if (deferred) {
             throw new IllegalStateException("Fit cannot be used with remote views.");
         }
         if (placeholderDrawable != null || placeholderResId != 0 || errorDrawable != null) {
-            throw new IllegalArgumentException(
-                    "Cannot use placeholder or error drawables with remote views.");
+            throw new IllegalArgumentException("Cannot use placeholder or error drawables with remote views.");
         }
 
         Request request = createRequest(started);
         String key = createKey(request, new StringBuilder()); // Non-main thread needs own builder.
 
-        RemoteViewsAction action =
-                new AppWidgetAction(picasso, request, remoteViews, viewId, appWidgetIds, memoryPolicy,
-                        networkPolicy, key, tag, errorResId, callback);
+        RemoteViewsAction action = new AppWidgetAction(picasso, request, remoteViews, viewId, appWidgetIds, memoryPolicy, networkPolicy, key, tag, errorResId, callback);
 
         performRemoteViewInto(action);
     }
@@ -754,24 +697,14 @@ public class RequestCreator {
             setPlaceholder(target, getPlaceholderDrawable());
         }
 
-        Action action =
-                new ImageViewAction(picasso, target, request, memoryPolicy, networkPolicy, errorResId,
-                        errorDrawable, requestKey, tag, callback, noFade);
+        Action action = new ImageViewAction(picasso, target, request, memoryPolicy, networkPolicy, errorResId, errorDrawable, requestKey, tag, callback, noFade);
 
         picasso.enqueueAndSubmit(action);
     }
 
     private Drawable getPlaceholderDrawable() {
         if (placeholderResId != 0) {
-            if (Build.VERSION.SDK_INT >= 21) {
-                return picasso.context.getDrawable(placeholderResId);
-            } else if (Build.VERSION.SDK_INT >= 16) {
-                return picasso.context.getResources().getDrawable(placeholderResId);
-            } else {
-                TypedValue value = new TypedValue();
-                picasso.context.getResources().getValue(placeholderResId, value, true);
-                return picasso.context.getResources().getDrawable(value.resourceId);
-            }
+            return AppCompatResources.getDrawable(picasso.context, placeholderResId);
         } else {
             return placeholderDrawable; // This may be null which is expected and desired behavior.
         }

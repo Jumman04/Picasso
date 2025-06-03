@@ -15,13 +15,13 @@
  */
 package com.squareup.picasso;
 
+import static com.squareup.picasso.Utils.KEY_SEPARATOR;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-import static com.squareup.picasso.Utils.KEY_SEPARATOR;
 
 /**
  * A memory cache which uses a least-recently used eviction policy.
@@ -57,9 +57,6 @@ public final class LruCache implements Cache {
 
     @Override
     public void set(@NonNull String key, @NonNull Bitmap bitmap) {
-        if (key == null || bitmap == null) {
-            throw new NullPointerException("key == null || bitmap == null");
-        }
 
         int byteCount = Utils.getBitmapBytes(bitmap);
 
@@ -93,9 +90,7 @@ public final class LruCache implements Cache {
     public void clearKeyUri(String uri) {
         // Keys are prefixed with a URI followed by '\n'.
         for (String key : cache.snapshot().keySet()) {
-            if (key.startsWith(uri)
-                    && key.length() > uri.length()
-                    && key.charAt(uri.length()) == KEY_SEPARATOR) {
+            if (key.startsWith(uri) && key.length() > uri.length() && key.charAt(uri.length()) == KEY_SEPARATOR) {
                 cache.remove(key);
             }
         }

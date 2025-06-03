@@ -15,6 +15,10 @@
  */
 package com.squareup.picasso;
 
+import static android.content.ContentResolver.SCHEME_CONTENT;
+import static android.provider.ContactsContract.Contacts.openContactPhotoInputStream;
+import static com.squareup.picasso.Picasso.LoadedFrom.DISK;
+
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.UriMatcher;
@@ -25,10 +29,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import okio.Okio;
-
-import static android.content.ContentResolver.SCHEME_CONTENT;
-import static android.provider.ContactsContract.Contacts.openContactPhotoInputStream;
-import static com.squareup.picasso.Picasso.LoadedFrom.DISK;
 
 class ContactsPhotoRequestHandler extends RequestHandler {
     /**
@@ -69,9 +69,7 @@ class ContactsPhotoRequestHandler extends RequestHandler {
     @Override
     public boolean canHandleRequest(Request data) {
         final Uri uri = data.uri;
-        return (SCHEME_CONTENT.equals(uri.getScheme())
-                && ContactsContract.Contacts.CONTENT_URI.getHost().equals(uri.getHost())
-                && matcher.match(data.uri) != UriMatcher.NO_MATCH);
+        return (SCHEME_CONTENT.equals(uri.getScheme()) && ContactsContract.Contacts.CONTENT_URI.getHost().equals(uri.getHost()) && matcher.match(data.uri) != UriMatcher.NO_MATCH);
     }
 
     @Override

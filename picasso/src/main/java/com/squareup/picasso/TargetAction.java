@@ -18,19 +18,18 @@ package com.squareup.picasso;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 
+import androidx.core.content.res.ResourcesCompat;
+
 final class TargetAction extends Action<Target> {
 
-    TargetAction(Picasso picasso, Target target, Request data, int memoryPolicy, int networkPolicy,
-                 Drawable errorDrawable, String key, Object tag, int errorResId) {
-        super(picasso, target, data, memoryPolicy, networkPolicy, errorResId, errorDrawable, key, tag,
-                false);
+    TargetAction(Picasso picasso, Target target, Request data, int memoryPolicy, int networkPolicy, Drawable errorDrawable, String key, Object tag, int errorResId) {
+        super(picasso, target, data, memoryPolicy, networkPolicy, errorResId, errorDrawable, key, tag, false);
     }
 
     @Override
     void complete(Bitmap result, Picasso.LoadedFrom from) {
         if (result == null) {
-            throw new AssertionError(
-                    String.format("Attempted to complete action with no result!\n%s", this));
+            throw new AssertionError(String.format("Attempted to complete action with no result!\n%s", this));
         }
         Target target = getTarget();
         if (target != null) {
@@ -46,7 +45,7 @@ final class TargetAction extends Action<Target> {
         Target target = getTarget();
         if (target != null) {
             if (errorResId != 0) {
-                target.onBitmapFailed(e, picasso.context.getResources().getDrawable(errorResId));
+                target.onBitmapFailed(e, ResourcesCompat.getDrawable(picasso.context.getResources(), errorResId, null));
             } else {
                 target.onBitmapFailed(e, errorDrawable);
             }

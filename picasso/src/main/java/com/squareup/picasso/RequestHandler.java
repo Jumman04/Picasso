@@ -15,6 +15,8 @@
  */
 package com.squareup.picasso;
 
+import static com.squareup.picasso.Utils.checkNotNull;
+
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.NetworkInfo;
@@ -25,8 +27,6 @@ import androidx.annotation.Nullable;
 import java.io.IOException;
 
 import okio.Source;
-
-import static com.squareup.picasso.Utils.checkNotNull;
 
 /**
  * {@code RequestHandler} allows you to extend Picasso to load images in ways that are not
@@ -70,14 +70,11 @@ public abstract class RequestHandler {
         return options != null && options.inJustDecodeBounds;
     }
 
-    static void calculateInSampleSize(int reqWidth, int reqHeight, BitmapFactory.Options options,
-                                      Request request) {
-        calculateInSampleSize(reqWidth, reqHeight, options.outWidth, options.outHeight, options,
-                request);
+    static void calculateInSampleSize(int reqWidth, int reqHeight, BitmapFactory.Options options, Request request) {
+        calculateInSampleSize(reqWidth, reqHeight, options.outWidth, options.outHeight, options, request);
     }
 
-    static void calculateInSampleSize(int reqWidth, int reqHeight, int width, int height,
-                                      BitmapFactory.Options options, Request request) {
+    static void calculateInSampleSize(int reqWidth, int reqHeight, int width, int height, BitmapFactory.Options options, Request request) {
         int sampleSize = 1;
         if (height > reqHeight || width > reqWidth) {
             final int heightRatio;
@@ -89,9 +86,7 @@ public abstract class RequestHandler {
             } else {
                 heightRatio = (int) Math.floor((float) height / (float) reqHeight);
                 widthRatio = (int) Math.floor((float) width / (float) reqWidth);
-                sampleSize = request.centerInside
-                        ? Math.max(heightRatio, widthRatio)
-                        : Math.min(heightRatio, widthRatio);
+                sampleSize = request.centerInside ? Math.max(heightRatio, widthRatio) : Math.min(heightRatio, widthRatio);
             }
         }
         options.inSampleSize = sampleSize;
@@ -145,11 +140,7 @@ public abstract class RequestHandler {
             this(null, checkNotNull(source, "source == null"), loadedFrom, 0);
         }
 
-        Result(
-                @Nullable Bitmap bitmap,
-                @Nullable Source source,
-                @NonNull Picasso.LoadedFrom loadedFrom,
-                int exifOrientation) {
+        Result(@Nullable Bitmap bitmap, @Nullable Source source, @NonNull Picasso.LoadedFrom loadedFrom, int exifOrientation) {
             if ((bitmap != null) == (source != null)) {
                 throw new AssertionError();
             }

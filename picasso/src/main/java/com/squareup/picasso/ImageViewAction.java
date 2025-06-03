@@ -25,19 +25,15 @@ class ImageViewAction extends Action<ImageView> {
 
     Callback callback;
 
-    ImageViewAction(Picasso picasso, ImageView imageView, Request data, int memoryPolicy,
-                    int networkPolicy, int errorResId, Drawable errorDrawable, String key, Object tag,
-                    Callback callback, boolean noFade) {
-        super(picasso, imageView, data, memoryPolicy, networkPolicy, errorResId, errorDrawable, key,
-                tag, noFade);
+    ImageViewAction(Picasso picasso, ImageView imageView, Request data, int memoryPolicy, int networkPolicy, int errorResId, Drawable errorDrawable, String key, Object tag, Callback callback, boolean noFade) {
+        super(picasso, imageView, data, memoryPolicy, networkPolicy, errorResId, errorDrawable, key, tag, noFade);
         this.callback = callback;
     }
 
     @Override
     public void complete(Bitmap result, Picasso.LoadedFrom from) {
         if (result == null) {
-            throw new AssertionError(
-                    String.format("Attempted to complete action with no result!\n%s", this));
+            throw new AssertionError(String.format("Attempted to complete action with no result!\n%s", this));
         }
 
         ImageView target = this.target.get();

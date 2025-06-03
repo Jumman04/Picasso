@@ -15,6 +15,26 @@
  */
 package com.squareup.picasso;
 
+import static android.content.Context.CONNECTIVITY_SERVICE;
+import static android.content.Intent.ACTION_AIRPLANE_MODE_CHANGED;
+import static android.net.ConnectivityManager.CONNECTIVITY_ACTION;
+import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
+import static com.squareup.picasso.BitmapHunter.forRequest;
+import static com.squareup.picasso.MemoryPolicy.shouldWriteToMemoryCache;
+import static com.squareup.picasso.Utils.OWNER_DISPATCHER;
+import static com.squareup.picasso.Utils.VERB_BATCHED;
+import static com.squareup.picasso.Utils.VERB_CANCELED;
+import static com.squareup.picasso.Utils.VERB_DELIVERED;
+import static com.squareup.picasso.Utils.VERB_ENQUEUED;
+import static com.squareup.picasso.Utils.VERB_IGNORED;
+import static com.squareup.picasso.Utils.VERB_PAUSED;
+import static com.squareup.picasso.Utils.VERB_REPLAYING;
+import static com.squareup.picasso.Utils.VERB_RETRYING;
+import static com.squareup.picasso.Utils.getLogIdsForHunter;
+import static com.squareup.picasso.Utils.getService;
+import static com.squareup.picasso.Utils.hasPermission;
+import static com.squareup.picasso.Utils.log;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
@@ -37,26 +57,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
-
-import static android.content.Context.CONNECTIVITY_SERVICE;
-import static android.content.Intent.ACTION_AIRPLANE_MODE_CHANGED;
-import static android.net.ConnectivityManager.CONNECTIVITY_ACTION;
-import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
-import static com.squareup.picasso.BitmapHunter.forRequest;
-import static com.squareup.picasso.MemoryPolicy.shouldWriteToMemoryCache;
-import static com.squareup.picasso.Utils.OWNER_DISPATCHER;
-import static com.squareup.picasso.Utils.VERB_BATCHED;
-import static com.squareup.picasso.Utils.VERB_CANCELED;
-import static com.squareup.picasso.Utils.VERB_DELIVERED;
-import static com.squareup.picasso.Utils.VERB_ENQUEUED;
-import static com.squareup.picasso.Utils.VERB_IGNORED;
-import static com.squareup.picasso.Utils.VERB_PAUSED;
-import static com.squareup.picasso.Utils.VERB_REPLAYING;
-import static com.squareup.picasso.Utils.VERB_RETRYING;
-import static com.squareup.picasso.Utils.getLogIdsForHunter;
-import static com.squareup.picasso.Utils.getService;
-import static com.squareup.picasso.Utils.hasPermission;
-import static com.squareup.picasso.Utils.log;
 
 class Dispatcher {
     static final int REQUEST_SUBMIT = 1;
@@ -96,8 +96,7 @@ class Dispatcher {
 
     boolean airplaneMode;
 
-    Dispatcher(Context context, ExecutorService service, Handler mainThreadHandler,
-               Downloader downloader, Cache cache, Stats stats) {
+    Dispatcher(Context context, ExecutorService service, Handler mainThreadHandler, Downloader downloader, Cache cache, Stats stats) {
         this.dispatcherThread = new DispatcherThread();
         this.dispatcherThread.start();
         Utils.flushStackLocalLeaks(dispatcherThread.getLooper());
@@ -168,8 +167,7 @@ class Dispatcher {
     }
 
     void dispatchAirplaneModeChange(boolean airplaneMode) {
-        handler.sendMessage(handler.obtainMessage(AIRPLANE_MODE_CHANGE,
-                airplaneMode ? AIRPLANE_MODE_ON : AIRPLANE_MODE_OFF, 0));
+        handler.sendMessage(handler.obtainMessage(AIRPLANE_MODE_CHANGE, airplaneMode ? AIRPLANE_MODE_ON : AIRPLANE_MODE_OFF, 0));
     }
 
     void performSubmit(Action action) {
@@ -180,8 +178,7 @@ class Dispatcher {
         if (pausedTags.contains(action.getTag())) {
             pausedActions.put(action.getTarget(), action);
             if (action.getPicasso().loggingEnabled) {
-                log(OWNER_DISPATCHER, VERB_PAUSED, action.request.logId(),
-                        "because tag '" + action.getTag() + "' is paused");
+                log(OWNER_DISPATCHER, VERB_PAUSED, action.request.logId(), "because tag '" + action.getTag() + "' is paused");
             }
             return;
         }
@@ -227,8 +224,7 @@ class Dispatcher {
         if (pausedTags.contains(action.getTag())) {
             pausedActions.remove(action.getTarget());
             if (action.getPicasso().loggingEnabled) {
-                log(OWNER_DISPATCHER, VERB_CANCELED, action.getRequest().logId(),
-                        "because paused request got canceled");
+                log(OWNER_DISPATCHER, VERB_CANCELED, action.getRequest().logId(), "because paused request got canceled");
             }
         }
 
@@ -263,8 +259,7 @@ class Dispatcher {
                 hunter.detach(single);
                 pausedActions.put(single.getTarget(), single);
                 if (loggingEnabled) {
-                    log(OWNER_DISPATCHER, VERB_PAUSED, single.request.logId(),
-                            "because tag '" + tag + "' was paused");
+                    log(OWNER_DISPATCHER, VERB_PAUSED, single.request.logId(), "because tag '" + tag + "' was paused");
                 }
             }
 
@@ -278,8 +273,7 @@ class Dispatcher {
                     hunter.detach(action);
                     pausedActions.put(action.getTarget(), action);
                     if (loggingEnabled) {
-                        log(OWNER_DISPATCHER, VERB_PAUSED, action.request.logId(),
-                                "because tag '" + tag + "' was paused");
+                        log(OWNER_DISPATCHER, VERB_PAUSED, action.request.logId(), "because tag '" + tag + "' was paused");
                     }
                 }
             }
@@ -371,8 +365,7 @@ class Dispatcher {
 
     void performError(BitmapHunter hunter, boolean willReplay) {
         if (hunter.getPicasso().loggingEnabled) {
-            log(OWNER_DISPATCHER, VERB_BATCHED, getLogIdsForHunter(hunter),
-                    "for error" + (willReplay ? " (will replay)" : ""));
+            log(OWNER_DISPATCHER, VERB_BATCHED, getLogIdsForHunter(hunter), "for error" + (willReplay ? " (will replay)" : ""));
         }
         hunterMap.remove(hunter.getKey());
         batch(hunter);
@@ -413,7 +406,6 @@ class Dispatcher {
         }
         List<Action> joined = hunter.getActions();
         if (joined != null) {
-            //noinspection ForLoopReplaceableByForEach
             for (int i = 0, n = joined.size(); i < n; i++) {
                 Action join = joined.get(i);
                 markForReplay(join);
@@ -516,11 +508,8 @@ class Dispatcher {
                     break;
                 }
                 default:
-                    Picasso.HANDLER.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            throw new AssertionError("Unknown handler message received: " + msg.what);
-                        }
+                    Picasso.HANDLER.post(() -> {
+                        throw new AssertionError("Unknown handler message received: " + msg.what);
                     });
             }
         }

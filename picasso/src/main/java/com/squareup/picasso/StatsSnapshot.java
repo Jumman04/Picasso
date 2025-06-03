@@ -15,12 +15,15 @@
  */
 package com.squareup.picasso;
 
+import static com.squareup.picasso.Picasso.TAG;
+
 import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-
-import static com.squareup.picasso.Picasso.TAG;
+import java.util.Locale;
 
 /**
  * Represents all stats for a {@link Picasso} instance at a single point in time.
@@ -42,10 +45,7 @@ public class StatsSnapshot {
 
     public final long timeStamp;
 
-    public StatsSnapshot(int maxSize, int size, long cacheHits, long cacheMisses,
-                         long totalDownloadSize, long totalOriginalBitmapSize, long totalTransformedBitmapSize,
-                         long averageDownloadSize, long averageOriginalBitmapSize, long averageTransformedBitmapSize,
-                         int downloadCount, int originalBitmapCount, int transformedBitmapCount, long timeStamp) {
+    public StatsSnapshot(int maxSize, int size, long cacheHits, long cacheMisses, long totalDownloadSize, long totalOriginalBitmapSize, long totalTransformedBitmapSize, long averageDownloadSize, long averageOriginalBitmapSize, long averageTransformedBitmapSize, int downloadCount, int originalBitmapCount, int transformedBitmapCount, long timeStamp) {
         this.maxSize = maxSize;
         this.size = size;
         this.cacheHits = cacheHits;
@@ -112,37 +112,10 @@ public class StatsSnapshot {
         writer.flush();
     }
 
+    @NonNull
     @Override
     public String toString() {
-        return "StatsSnapshot{"
-                + "maxSize="
-                + maxSize
-                + ", size="
-                + size
-                + ", cacheHits="
-                + cacheHits
-                + ", cacheMisses="
-                + cacheMisses
-                + ", downloadCount="
-                + downloadCount
-                + ", totalDownloadSize="
-                + totalDownloadSize
-                + ", averageDownloadSize="
-                + averageDownloadSize
-                + ", totalOriginalBitmapSize="
-                + totalOriginalBitmapSize
-                + ", totalTransformedBitmapSize="
-                + totalTransformedBitmapSize
-                + ", averageOriginalBitmapSize="
-                + averageOriginalBitmapSize
-                + ", averageTransformedBitmapSize="
-                + averageTransformedBitmapSize
-                + ", originalBitmapCount="
-                + originalBitmapCount
-                + ", transformedBitmapCount="
-                + transformedBitmapCount
-                + ", timeStamp="
-                + timeStamp
-                + '}';
+        return String.format(Locale.getDefault(), "StatsSnapshot{maxSize=%d, size=%d, cacheHits=%d, cacheMisses=%d, downloadCount=%d, totalDownloadSize=%d, averageDownloadSize=%d, totalOriginalBitmapSize=%d, totalTransformedBitmapSize=%d, averageOriginalBitmapSize=%d, averageTransformedBitmapSize=%d, originalBitmapCount=%d, transformedBitmapCount=%d, timeStamp=%d}", maxSize,                         // int
+                size, cacheHits, cacheMisses, downloadCount, totalDownloadSize, averageDownloadSize, totalOriginalBitmapSize, totalTransformedBitmapSize, averageOriginalBitmapSize, averageTransformedBitmapSize, originalBitmapCount, transformedBitmapCount, timeStamp);
     }
 }

@@ -15,13 +15,13 @@
  */
 package com.squareup.picasso;
 
-import androidx.annotation.VisibleForTesting;
-
 import android.view.View;
 import android.view.View.OnAttachStateChangeListener;
 import android.view.ViewTreeObserver;
 import android.view.ViewTreeObserver.OnPreDrawListener;
 import android.widget.ImageView;
+
+import androidx.annotation.VisibleForTesting;
 
 import java.lang.ref.WeakReference;
 

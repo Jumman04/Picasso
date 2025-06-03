@@ -15,13 +15,13 @@
  */
 package com.squareup.picasso;
 
+import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
+
 import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
-
-import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 
 class Stats {
     private static final int CACHE_HIT = 0;
@@ -111,10 +111,7 @@ class Stats {
     }
 
     StatsSnapshot createSnapshot() {
-        return new StatsSnapshot(cache.maxSize(), cache.size(), cacheHits, cacheMisses,
-                totalDownloadSize, totalOriginalBitmapSize, totalTransformedBitmapSize, averageDownloadSize,
-                averageOriginalBitmapSize, averageTransformedBitmapSize, downloadCount, originalBitmapCount,
-                transformedBitmapCount, System.currentTimeMillis());
+        return new StatsSnapshot(cache.maxSize(), cache.size(), cacheHits, cacheMisses, totalDownloadSize, totalOriginalBitmapSize, totalTransformedBitmapSize, averageDownloadSize, averageOriginalBitmapSize, averageTransformedBitmapSize, downloadCount, originalBitmapCount, transformedBitmapCount, System.currentTimeMillis());
     }
 
     private void processBitmap(Bitmap bitmap, int what) {
@@ -151,11 +148,8 @@ class Stats {
                     stats.performDownloadFinished((Long) msg.obj);
                     break;
                 default:
-                    Picasso.HANDLER.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            throw new AssertionError("Unhandled stats message." + msg.what);
-                        }
+                    Picasso.HANDLER.post(() -> {
+                        throw new AssertionError("Unhandled stats message." + msg.what);
                     });
             }
         }

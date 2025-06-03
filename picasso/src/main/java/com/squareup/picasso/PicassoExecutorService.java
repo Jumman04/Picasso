@@ -35,8 +35,7 @@ class PicassoExecutorService extends ThreadPoolExecutor {
     private static final int DEFAULT_THREAD_COUNT = 3;
 
     PicassoExecutorService() {
-        super(DEFAULT_THREAD_COUNT, DEFAULT_THREAD_COUNT, 0, TimeUnit.MILLISECONDS,
-                new PriorityBlockingQueue<Runnable>(), new Utils.PicassoThreadFactory());
+        super(DEFAULT_THREAD_COUNT, DEFAULT_THREAD_COUNT, 0, TimeUnit.MILLISECONDS, new PriorityBlockingQueue<>(), new Utils.PicassoThreadFactory());
     }
 
     void adjustThreadCount(NetworkInfo info) {
@@ -89,8 +88,7 @@ class PicassoExecutorService extends ThreadPoolExecutor {
         return ftask;
     }
 
-    private static final class PicassoFutureTask extends FutureTask<BitmapHunter>
-            implements Comparable<PicassoFutureTask> {
+    private static final class PicassoFutureTask extends FutureTask<BitmapHunter> implements Comparable<PicassoFutureTask> {
         private final BitmapHunter hunter;
 
         PicassoFutureTask(BitmapHunter hunter) {

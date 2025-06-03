@@ -15,7 +15,12 @@
  */
 package com.squareup.picasso;
 
-import android.annotation.TargetApi;
+import static android.content.Context.ACTIVITY_SERVICE;
+import static android.content.pm.ApplicationInfo.FLAG_LARGE_HEAP;
+import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
+import static com.squareup.picasso.Picasso.TAG;
+import static java.lang.String.format;
+
 import android.app.ActivityManager;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -30,6 +35,8 @@ import android.os.StatFs;
 import android.provider.Settings;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -38,16 +45,6 @@ import java.util.concurrent.ThreadFactory;
 
 import okio.BufferedSource;
 import okio.ByteString;
-
-import static android.content.Context.ACTIVITY_SERVICE;
-import static android.content.pm.ApplicationInfo.FLAG_LARGE_HEAP;
-import static android.os.Build.VERSION.SDK_INT;
-import static android.os.Build.VERSION_CODES.JELLY_BEAN_MR1;
-import static android.os.Build.VERSION_CODES.JELLY_BEAN_MR2;
-import static android.os.Build.VERSION_CODES.KITKAT;
-import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
-import static com.squareup.picasso.Picasso.TAG;
-import static java.lang.String.format;
 
 final class Utils {
     static final String THREAD_PREFIX = "Picasso-";
@@ -105,7 +102,7 @@ final class Utils {
     }
 
     static int getBitmapBytes(Bitmap bitmap) {
-        int result = SDK_INT >= KITKAT ? bitmap.getAllocationByteCount() : bitmap.getByteCount();
+        int result = bitmap.getAllocationByteCount();
         if (result < 0) {
             throw new IllegalStateException("Negative size: " + bitmap);
         }
@@ -201,7 +198,6 @@ final class Utils {
         }
 
         if (data.transformations != null) {
-            //noinspection ForLoopReplaceableByForEach
             for (int i = 0, count = data.transformations.size(); i < count; i++) {
                 builder.append(data.transformations.get(i).key());
                 builder.append(KEY_SEPARATOR);
@@ -220,18 +216,13 @@ final class Utils {
         return cache;
     }
 
-    @TargetApi(JELLY_BEAN_MR2)
     static long calculateDiskCacheSize(File dir) {
         long size = MIN_DISK_CACHE_SIZE;
 
         try {
             StatFs statFs = new StatFs(dir.getAbsolutePath());
-            //noinspection deprecation
-            long blockCount =
-                    SDK_INT < JELLY_BEAN_MR2 ? (long) statFs.getBlockCount() : statFs.getBlockCountLong();
-            //noinspection deprecation
-            long blockSize =
-                    SDK_INT < JELLY_BEAN_MR2 ? (long) statFs.getBlockSize() : statFs.getBlockSizeLong();
+            long blockCount = statFs.getBlockCountLong();
+            long blockSize = statFs.getBlockSizeLong();
             long available = blockCount * blockSize;
             // Target 2% of the total space.
             size = available / 50;
@@ -253,10 +244,6 @@ final class Utils {
     static boolean isAirplaneModeOn(Context context) {
         ContentResolver contentResolver = context.getContentResolver();
         try {
-            if (SDK_INT < JELLY_BEAN_MR1) {
-                //noinspection deprecation
-                return Settings.System.getInt(contentResolver, Settings.System.AIRPLANE_MODE_ON, 0) != 0;
-            }
             return Settings.Global.getInt(contentResolver, Settings.Global.AIRPLANE_MODE_ON, 0) != 0;
         } catch (NullPointerException e) {
             // https://github.com/square/picasso/issues/761, some devices might crash here, assume that
@@ -278,8 +265,7 @@ final class Utils {
     }
 
     static boolean isWebPFile(BufferedSource source) throws IOException {
-        return source.rangeEquals(0, WEBP_FILE_HEADER_RIFF)
-                && source.rangeEquals(8, WEBP_FILE_HEADER_WEBP);
+        return source.rangeEquals(0, WEBP_FILE_HEADER_RIFF) && source.rangeEquals(8, WEBP_FILE_HEADER_WEBP);
     }
 
     static int getResourceId(Resources resources, Request data) throws FileNotFoundException {
@@ -334,7 +320,7 @@ final class Utils {
     static void flushStackLocalLeaks(Looper looper) {
         Handler handler = new Handler(looper) {
             @Override
-            public void handleMessage(Message msg) {
+            public void handleMessage(@NonNull Message msg) {
                 sendMessageDelayed(obtainMessage(), THREAD_LEAK_CLEANING_MS);
             }
         };
@@ -342,7 +328,6 @@ final class Utils {
     }
 
     static class PicassoThreadFactory implements ThreadFactory {
-        @SuppressWarnings("NullableProblems")
         public Thread newThread(Runnable r) {
             return new PicassoThread(r);
         }

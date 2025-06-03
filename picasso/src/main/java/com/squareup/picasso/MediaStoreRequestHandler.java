@@ -15,6 +15,18 @@
  */
 package com.squareup.picasso;
 
+import static android.content.ContentResolver.SCHEME_CONTENT;
+import static android.content.ContentUris.parseId;
+import static android.provider.MediaStore.Images;
+import static android.provider.MediaStore.Images.Thumbnails.FULL_SCREEN_KIND;
+import static android.provider.MediaStore.Images.Thumbnails.MICRO_KIND;
+import static android.provider.MediaStore.Images.Thumbnails.MINI_KIND;
+import static android.provider.MediaStore.Video;
+import static com.squareup.picasso.MediaStoreRequestHandler.PicassoKind.FULL;
+import static com.squareup.picasso.MediaStoreRequestHandler.PicassoKind.MICRO;
+import static com.squareup.picasso.MediaStoreRequestHandler.PicassoKind.MINI;
+import static com.squareup.picasso.Picasso.LoadedFrom.DISK;
+
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
@@ -28,22 +40,8 @@ import java.io.IOException;
 import okio.Okio;
 import okio.Source;
 
-import static android.content.ContentResolver.SCHEME_CONTENT;
-import static android.content.ContentUris.parseId;
-import static android.provider.MediaStore.Images;
-import static android.provider.MediaStore.Video;
-import static android.provider.MediaStore.Images.Thumbnails.FULL_SCREEN_KIND;
-import static android.provider.MediaStore.Images.Thumbnails.MICRO_KIND;
-import static android.provider.MediaStore.Images.Thumbnails.MINI_KIND;
-import static com.squareup.picasso.MediaStoreRequestHandler.PicassoKind.FULL;
-import static com.squareup.picasso.MediaStoreRequestHandler.PicassoKind.MICRO;
-import static com.squareup.picasso.MediaStoreRequestHandler.PicassoKind.MINI;
-import static com.squareup.picasso.Picasso.LoadedFrom.DISK;
-
 class MediaStoreRequestHandler extends ContentStreamRequestHandler {
-    private static final String[] CONTENT_ORIENTATION = new String[]{
-            Images.ImageColumns.ORIENTATION
-    };
+    private static final String[] CONTENT_ORIENTATION = new String[]{Images.ImageColumns.ORIENTATION};
 
     MediaStoreRequestHandler(Context context) {
         super(context);
@@ -59,9 +57,7 @@ class MediaStoreRequestHandler extends ContentStreamRequestHandler {
     }
 
     static int getExifOrientation(ContentResolver contentResolver, Uri uri) {
-        Cursor cursor = null;
-        try {
-            cursor = contentResolver.query(uri, CONTENT_ORIENTATION, null, null, null);
+        try (Cursor cursor = contentResolver.query(uri, CONTENT_ORIENTATION, null, null, null)) {
             if (cursor == null || !cursor.moveToFirst()) {
                 return 0;
             }
@@ -69,18 +65,13 @@ class MediaStoreRequestHandler extends ContentStreamRequestHandler {
         } catch (RuntimeException ignored) {
             // If the orientation column doesn't exist, assume no rotation.
             return 0;
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
         }
     }
 
     @Override
     public boolean canHandleRequest(Request data) {
         final Uri uri = data.uri;
-        return (SCHEME_CONTENT.equals(uri.getScheme())
-                && MediaStore.AUTHORITY.equals(uri.getAuthority()));
+        return (SCHEME_CONTENT.equals(uri.getScheme()) && MediaStore.AUTHORITY.equals(uri.getAuthority()));
     }
 
     @Override
@@ -103,8 +94,7 @@ class MediaStoreRequestHandler extends ContentStreamRequestHandler {
             BitmapFactory.Options options = createBitmapOptions(request);
             options.inJustDecodeBounds = true;
 
-            calculateInSampleSize(request.targetWidth, request.targetHeight, picassoKind.width,
-                    picassoKind.height, options, request);
+            calculateInSampleSize(request.targetWidth, request.targetHeight, picassoKind.width, picassoKind.height, options, request);
 
             Bitmap bitmap;
 
@@ -114,8 +104,7 @@ class MediaStoreRequestHandler extends ContentStreamRequestHandler {
                 int kind = (picassoKind == FULL) ? Video.Thumbnails.MINI_KIND : picassoKind.androidKind;
                 bitmap = Video.Thumbnails.getThumbnail(contentResolver, id, kind, options);
             } else {
-                bitmap =
-                        Images.Thumbnails.getThumbnail(contentResolver, id, picassoKind.androidKind, options);
+                bitmap = Images.Thumbnails.getThumbnail(contentResolver, id, picassoKind.androidKind, options);
             }
 
             if (bitmap != null) {
@@ -128,9 +117,7 @@ class MediaStoreRequestHandler extends ContentStreamRequestHandler {
     }
 
     enum PicassoKind {
-        MICRO(MICRO_KIND, 96, 96),
-        MINI(MINI_KIND, 512, 384),
-        FULL(FULL_SCREEN_KIND, -1, -1);
+        MICRO(MICRO_KIND, 96, 96), MINI(MINI_KIND, 512, 384), FULL(FULL_SCREEN_KIND, -1, -1);
 
         final int androidKind;
         final int width;
