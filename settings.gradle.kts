@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Picasso"
 include(":app")
- 
+include(":picasso")
