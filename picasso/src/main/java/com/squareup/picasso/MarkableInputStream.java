@@ -34,7 +34,7 @@ final class MarkableInputStream extends InputStream {
     private long limit;
     private long defaultMark = -1;
     private boolean allowExpire = true;
-    private int limitIncrement = -1;
+    private final int limitIncrement;
 
     MarkableInputStream(InputStream in) {
         this(in, DEFAULT_BUFFER_SIZE);

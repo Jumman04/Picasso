@@ -40,7 +40,7 @@ public final class LruCache implements Cache {
      * Create a cache with a given maximum size in bytes.
      */
     public LruCache(int maxByteCount) {
-        cache = new android.util.LruCache<String, LruCache.BitmapAndSize>(maxByteCount) {
+        cache = new android.util.LruCache<>(maxByteCount) {
             @Override
             protected int sizeOf(String key, BitmapAndSize value) {
                 return value.byteCount;
