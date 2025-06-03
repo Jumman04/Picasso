@@ -1,6 +1,7 @@
 package com.jummania.picasso;
 
 import android.os.Bundle;
+import android.widget.ImageView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -23,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        Picasso.get();
+        ImageView imageView = findViewById(R.id.imageView);
+        Picasso.get().load("https://lh3.googleusercontent.com/a/ACg8ocKAvnwd0HlL6aayEK519K_fiZVgU-sz0JEJyV3XLRr1lSh_ELIsvg").into(imageView);
     }
 }

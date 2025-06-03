@@ -15,6 +15,23 @@
  */
 package com.squareup.picasso;
 
+import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
+import static com.squareup.picasso.Action.RequestWeakReference;
+import static com.squareup.picasso.Dispatcher.HUNTER_BATCH_COMPLETE;
+import static com.squareup.picasso.Dispatcher.REQUEST_BATCH_RESUME;
+import static com.squareup.picasso.Dispatcher.REQUEST_GCED;
+import static com.squareup.picasso.MemoryPolicy.shouldReadFromMemoryCache;
+import static com.squareup.picasso.Picasso.LoadedFrom.MEMORY;
+import static com.squareup.picasso.Utils.OWNER_MAIN;
+import static com.squareup.picasso.Utils.THREAD_LEAK_CLEANING_MS;
+import static com.squareup.picasso.Utils.THREAD_PREFIX;
+import static com.squareup.picasso.Utils.VERB_CANCELED;
+import static com.squareup.picasso.Utils.VERB_COMPLETED;
+import static com.squareup.picasso.Utils.VERB_ERRORED;
+import static com.squareup.picasso.Utils.VERB_RESUMED;
+import static com.squareup.picasso.Utils.checkMain;
+import static com.squareup.picasso.Utils.log;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -40,23 +57,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
-
-import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
-import static com.squareup.picasso.Action.RequestWeakReference;
-import static com.squareup.picasso.Dispatcher.HUNTER_BATCH_COMPLETE;
-import static com.squareup.picasso.Dispatcher.REQUEST_BATCH_RESUME;
-import static com.squareup.picasso.Dispatcher.REQUEST_GCED;
-import static com.squareup.picasso.MemoryPolicy.shouldReadFromMemoryCache;
-import static com.squareup.picasso.Picasso.LoadedFrom.MEMORY;
-import static com.squareup.picasso.Utils.OWNER_MAIN;
-import static com.squareup.picasso.Utils.THREAD_LEAK_CLEANING_MS;
-import static com.squareup.picasso.Utils.THREAD_PREFIX;
-import static com.squareup.picasso.Utils.VERB_CANCELED;
-import static com.squareup.picasso.Utils.VERB_COMPLETED;
-import static com.squareup.picasso.Utils.VERB_ERRORED;
-import static com.squareup.picasso.Utils.VERB_RESUMED;
-import static com.squareup.picasso.Utils.checkMain;
-import static com.squareup.picasso.Utils.log;
 
 /**
  * Image downloading, transformation, and caching manager.
@@ -119,9 +119,7 @@ public class Picasso {
     volatile boolean loggingEnabled;
     boolean shutdown;
 
-    Picasso(Context context, Dispatcher dispatcher, Cache cache, Listener listener,
-            RequestTransformer requestTransformer, List<RequestHandler> extraRequestHandlers, Stats stats,
-            Bitmap.Config defaultBitmapConfig, boolean indicatorsEnabled, boolean loggingEnabled) {
+    Picasso(Context context, Dispatcher dispatcher, Cache cache, Listener listener, RequestTransformer requestTransformer, List<RequestHandler> extraRequestHandlers, Stats stats, Bitmap.Config defaultBitmapConfig, boolean indicatorsEnabled, boolean loggingEnabled) {
         this.context = context;
         this.dispatcher = dispatcher;
         this.cache = cache;
@@ -262,8 +260,7 @@ public class Picasso {
             }
         }
 
-        List<DeferredRequestCreator> deferredRequestCreators =
-                new ArrayList<>(targetToDeferredRequestCreator.values());
+        List<DeferredRequestCreator> deferredRequestCreators = new ArrayList<>(targetToDeferredRequestCreator.values());
         //noinspection ForLoopReplaceableByForEach
         for (int i = 0, n = deferredRequestCreators.size(); i < n; i++) {
             DeferredRequestCreator deferredRequestCreator = deferredRequestCreators.get(i);
@@ -331,11 +328,8 @@ public class Picasso {
      * @see #load(int)
      */
     public RequestCreator load(@Nullable String path) {
-        if (path == null) {
+        if (path == null || path.isBlank()) {
             return new RequestCreator(this, null, 0);
-        }
-        if (path.trim().length() == 0) {
-            throw new IllegalArgumentException("Path must not be empty.");
         }
         return load(Uri.parse(path));
     }
@@ -485,10 +479,7 @@ public class Picasso {
     Request transformRequest(Request request) {
         Request transformed = requestTransformer.transformRequest(request);
         if (transformed == null) {
-            throw new IllegalStateException("Request transformer "
-                    + requestTransformer.getClass().getCanonicalName()
-                    + " returned null for "
-                    + request);
+            throw new IllegalStateException("Request transformer " + requestTransformer.getClass().getCanonicalName() + " returned null for " + request);
         }
         return transformed;
     }
@@ -611,8 +602,7 @@ public class Picasso {
         }
         if (target instanceof ImageView) {
             ImageView targetImageView = (ImageView) target;
-            DeferredRequestCreator deferredRequestCreator =
-                    targetToDeferredRequestCreator.remove(targetImageView);
+            DeferredRequestCreator deferredRequestCreator = targetToDeferredRequestCreator.remove(targetImageView);
             if (deferredRequestCreator != null) {
                 deferredRequestCreator.cancel();
             }
@@ -625,18 +615,14 @@ public class Picasso {
      * @see RequestCreator#priority(Priority)
      */
     public enum Priority {
-        LOW,
-        NORMAL,
-        HIGH
+        LOW, NORMAL, HIGH
     }
 
     /**
      * Describes where the image was loaded from.
      */
     public enum LoadedFrom {
-        MEMORY(Color.GREEN),
-        DISK(Color.BLUE),
-        NETWORK(Color.RED);
+        MEMORY(Color.GREEN), DISK(Color.BLUE), NETWORK(Color.RED);
 
         final int debugColor;
 
@@ -711,8 +697,7 @@ public class Picasso {
                     // We're forcing this reference to be cleared and replaced by looping every second
                     // when there is nothing to do.
                     // This behavior has been tested and reproduced with heap dumps.
-                    RequestWeakReference<?> remove =
-                            (RequestWeakReference<?>) referenceQueue.remove(THREAD_LEAK_CLEANING_MS);
+                    RequestWeakReference<?> remove = (RequestWeakReference<?>) referenceQueue.remove(THREAD_LEAK_CLEANING_MS);
                     Message message = handler.obtainMessage();
                     if (remove != null) {
                         message.what = REQUEST_GCED;
@@ -913,8 +898,7 @@ public class Picasso {
 
             Dispatcher dispatcher = new Dispatcher(context, service, HANDLER, downloader, cache, stats);
 
-            return new Picasso(context, dispatcher, cache, listener, transformer, requestHandlers, stats,
-                    defaultBitmapConfig, indicatorsEnabled, loggingEnabled);
+            return new Picasso(context, dispatcher, cache, listener, transformer, requestHandlers, stats, defaultBitmapConfig, indicatorsEnabled, loggingEnabled);
         }
     }
 }
