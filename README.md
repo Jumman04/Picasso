@@ -3,16 +3,14 @@ Picasso
 
 A powerful image downloading and caching library for Android
 
-![](website/static/sample.png)
+![](https://raw.githubusercontent.com/Jumman04/picasso-kotlin/refs/heads/master/website/static/sample.png)
 
 For more information please see [the website][1]
-
-
 
 Download
 --------
 
-Download [the latest JAR][2] or grab via Gradle:
+Download the latest AAR from [Maven Central][2] or grab via Gradle:
 
 ```groovy
 implementation 'com.squareup.picasso:picasso:2.8'
@@ -31,13 +29,14 @@ or Maven:
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
 
+Picasso requires at minimum Java 8 and API 24.
 
 
 ProGuard
 --------
 
 If you are using ProGuard you might need to add OkHttp's
-rules: https://github.com/square/okhttp/#proguard
+rules: https://github.com/square/okhttp/#r8--proguard
 
 
 
@@ -50,7 +49,7 @@ License
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+       https://www.apache.org/licenses/LICENSE-2.0
 
     Unless required by applicable law or agreed to in writing, software
     distributed under the License is distributed on an "AS IS" BASIS,
@@ -58,8 +57,8 @@ License
     See the License for the specific language governing permissions and
     limitations under the License.
 
-[1]: http://square.github.io/picasso/
+[1]: https://square.github.io/picasso/
 
-[2]: https://search.maven.org/remote_content?g=com.squareup.picasso&a=picasso&v=LATEST
+[2]: https://search.maven.org/search?q=g:com.squareup.picasso%20AND%20a:picasso
 
-[snap]: https://oss.sonatype.org/content/repositories/snapshots/
+[snap]: https://s01.oss.sonatype.org/content/repositories/snapshots/
