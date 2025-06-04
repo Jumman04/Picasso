@@ -32,10 +32,9 @@ import static com.squareup.picasso.Utils.VERB_REPLAYING;
 import static com.squareup.picasso.Utils.VERB_RETRYING;
 import static com.squareup.picasso.Utils.getLogIdsForHunter;
 import static com.squareup.picasso.Utils.getService;
-import static com.squareup.picasso.Utils.hasPermission;
+import static com.squareup.picasso.Utils.hasNetworkStatePermission;
 import static com.squareup.picasso.Utils.log;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -87,8 +86,8 @@ class Dispatcher {
     final ExecutorService service;
     final Downloader downloader;
     final Map<String, BitmapHunter> hunterMap;
-    final Map<Object, Action> failedActions;
-    final Map<Object, Action> pausedActions;
+    final Map<Object, Action<?>> failedActions;
+    final Map<Object, Action<?>> pausedActions;
     final Set<Object> pausedTags;
     final Handler handler;
     final Handler mainThreadHandler;
@@ -100,7 +99,7 @@ class Dispatcher {
 
     boolean airplaneMode;
 
-    Dispatcher(Context context, ExecutorService service, Handler mainThreadHandler, Downloader downloader, Cache cache, Stats stats) {
+    Dispatcher(Context context, ExecutorService service, Downloader downloader, Cache cache, Stats stats) {
         this.dispatcherThread = new DispatcherThread();
         this.dispatcherThread.start();
         Utils.flushStackLocalLeaks(dispatcherThread.getLooper());
@@ -112,12 +111,12 @@ class Dispatcher {
         this.pausedTags = new LinkedHashSet<>();
         this.handler = new DispatcherHandler(dispatcherThread.getLooper(), this);
         this.downloader = downloader;
-        this.mainThreadHandler = mainThreadHandler;
+        this.mainThreadHandler = Picasso.HANDLER;
         this.cache = cache;
         this.stats = stats;
         this.batch = new ArrayList<>(4);
         this.airplaneMode = Utils.isAirplaneModeOn(this.context);
-        this.scansNetworkChanges = hasPermission(context, Manifest.permission.ACCESS_NETWORK_STATE);
+        this.scansNetworkChanges = hasNetworkStatePermission(context);
         this.receiver = new NetworkBroadcastReceiver(this);
         receiver.register();
     }
@@ -133,11 +132,11 @@ class Dispatcher {
         Picasso.HANDLER.post(receiver::unregister);
     }
 
-    void dispatchSubmit(Action action) {
+    void dispatchSubmit(Action<?> action) {
         handler.sendMessage(handler.obtainMessage(REQUEST_SUBMIT, action));
     }
 
-    void dispatchCancel(Action action) {
+    void dispatchCancel(Action<?> action) {
         handler.sendMessage(handler.obtainMessage(REQUEST_CANCEL, action));
     }
 
@@ -169,11 +168,11 @@ class Dispatcher {
         handler.sendMessage(handler.obtainMessage(AIRPLANE_MODE_CHANGE, airplaneMode ? AIRPLANE_MODE_ON : AIRPLANE_MODE_OFF, 0));
     }
 
-    void performSubmit(Action action) {
+    void performSubmit(Action<?> action) {
         performSubmit(action, true);
     }
 
-    void performSubmit(Action action, boolean dismissFailed) {
+    void performSubmit(Action<?> action, boolean dismissFailed) {
         if (pausedTags.contains(action.getTag())) {
             pausedActions.put(action.getTarget(), action);
             if (action.getPicasso().loggingEnabled) {
@@ -207,7 +206,7 @@ class Dispatcher {
         }
     }
 
-    void performCancel(Action action) {
+    void performCancel(Action<?> action) {
         String key = action.getKey();
         BitmapHunter hunter = hunterMap.get(key);
         if (hunter != null) {
@@ -227,7 +226,7 @@ class Dispatcher {
             }
         }
 
-        Action remove = failedActions.remove(action.getTarget());
+        Action<?> remove = failedActions.remove(action.getTarget());
         if (remove != null && remove.getPicasso().loggingEnabled) {
             log(OWNER_DISPATCHER, VERB_CANCELED, remove.getRequest().logId(), "from replaying");
         }
@@ -245,8 +244,8 @@ class Dispatcher {
             BitmapHunter hunter = it.next();
             boolean loggingEnabled = hunter.getPicasso().loggingEnabled;
 
-            Action single = hunter.getAction();
-            List<Action> joined = hunter.getActions();
+            Action<?> single = hunter.getAction();
+            List<Action<?>> joined = hunter.getActions();
             boolean hasMultiple = joined != null && !joined.isEmpty();
 
             // Hunter has no requests, bail early.
@@ -264,7 +263,7 @@ class Dispatcher {
 
             if (hasMultiple) {
                 for (int i = joined.size() - 1; i >= 0; i--) {
-                    Action action = joined.get(i);
+                    Action<?> action = joined.get(i);
                     if (!action.getTag().equals(tag)) {
                         continue;
                     }
@@ -294,9 +293,9 @@ class Dispatcher {
             return;
         }
 
-        List<Action> batch = null;
-        for (Iterator<Action> i = pausedActions.values().iterator(); i.hasNext(); ) {
-            Action action = i.next();
+        List<Action<?>> batch = null;
+        for (Iterator<Action<?>> i = pausedActions.values().iterator(); i.hasNext(); ) {
+            Action<?> action = i.next();
             if (action.getTag().equals(tag)) {
                 if (batch == null) {
                     batch = new ArrayList<>();
@@ -391,9 +390,9 @@ class Dispatcher {
 
     private void flushFailedActions() {
         if (!failedActions.isEmpty()) {
-            Iterator<Action> iterator = failedActions.values().iterator();
+            Iterator<Action<?>> iterator = failedActions.values().iterator();
             while (iterator.hasNext()) {
-                Action action = iterator.next();
+                Action<?> action = iterator.next();
                 iterator.remove();
                 if (action.getPicasso().loggingEnabled) {
                     log(OWNER_DISPATCHER, VERB_REPLAYING, action.getRequest().logId());
@@ -404,20 +403,20 @@ class Dispatcher {
     }
 
     private void markForReplay(BitmapHunter hunter) {
-        Action action = hunter.getAction();
+        Action<?> action = hunter.getAction();
         if (action != null) {
             markForReplay(action);
         }
-        List<Action> joined = hunter.getActions();
+        List<Action<?>> joined = hunter.getActions();
         if (joined != null) {
             for (int i = 0, n = joined.size(); i < n; i++) {
-                Action join = joined.get(i);
+                Action<?> join = joined.get(i);
                 markForReplay(join);
             }
         }
     }
 
-    private void markForReplay(Action action) {
+    private void markForReplay(Action<?> action) {
         Object target = action.getTarget();
         if (target != null) {
             action.willReplay = true;
@@ -464,12 +463,12 @@ class Dispatcher {
         public void handleMessage(final Message msg) {
             switch (msg.what) {
                 case REQUEST_SUBMIT: {
-                    Action action = (Action) msg.obj;
+                    Action<?> action = (Action<?>) msg.obj;
                     dispatcher.performSubmit(action);
                     break;
                 }
                 case REQUEST_CANCEL: {
-                    Action action = (Action) msg.obj;
+                    Action<?> action = (Action<?>) msg.obj;
                     dispatcher.performCancel(action);
                     break;
                 }

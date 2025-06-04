@@ -28,13 +28,12 @@ final class MarkableInputStream extends InputStream {
     private static final int DEFAULT_BUFFER_SIZE = 4096;
     private static final int DEFAULT_LIMIT_INCREMENT = 1024;
     private final InputStream in;
-
+    private final int limitIncrement;
     private long offset;
     private long reset;
     private long limit;
     private long defaultMark = -1;
     private boolean allowExpire = true;
-    private final int limitIncrement;
 
     MarkableInputStream(InputStream in) {
         this(in, DEFAULT_BUFFER_SIZE);

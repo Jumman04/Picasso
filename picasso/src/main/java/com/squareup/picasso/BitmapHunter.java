@@ -95,8 +95,8 @@ class BitmapHunter implements Runnable {
     final int memoryPolicy;
     final RequestHandler requestHandler;
     int networkPolicy;
-    Action action;
-    List<Action> actions;
+    Action<?> action;
+    List<Action<?>> actions;
     Bitmap result;
     Future<?> future;
     Picasso.LoadedFrom loadedFrom;
@@ -105,7 +105,7 @@ class BitmapHunter implements Runnable {
     int retryCount;
     Priority priority;
 
-    BitmapHunter(Picasso picasso, Dispatcher dispatcher, Cache cache, Stats stats, Action action, RequestHandler requestHandler) {
+    BitmapHunter(Picasso picasso, Dispatcher dispatcher, Cache cache, Stats stats, Action<?> action, RequestHandler requestHandler) {
         this.sequence = SEQUENCE_GENERATOR.incrementAndGet();
         this.picasso = picasso;
         this.dispatcher = dispatcher;
@@ -166,13 +166,14 @@ class BitmapHunter implements Runnable {
     }
 
     static void updateThreadName(Request data) {
-        String name = data.getName();
-
         StringBuilder builder = NAME_BUILDER.get();
-        builder.ensureCapacity(Utils.THREAD_PREFIX.length() + name.length());
-        builder.replace(Utils.THREAD_PREFIX.length(), builder.length(), name);
+        if (builder != null) {
+            String name = data.getName();
+            builder.ensureCapacity(Utils.THREAD_PREFIX.length() + name.length());
+            builder.replace(Utils.THREAD_PREFIX.length(), builder.length(), name);
 
-        Thread.currentThread().setName(builder.toString());
+            Thread.currentThread().setName(builder.toString());
+        }
     }
 
     static BitmapHunter forRequest(Picasso picasso, Dispatcher dispatcher, Cache cache, Stats stats, Action<?> action) {
@@ -483,7 +484,6 @@ class BitmapHunter implements Runnable {
                     bitmap = decodeStream(source, data);
                 } catch (IOException ignored) {
                 }
-                //noinspection ConstantConditions If bitmap is null then source is guranteed non-null.
             }
         }
 
@@ -516,7 +516,7 @@ class BitmapHunter implements Runnable {
         return bitmap;
     }
 
-    void attach(Action action) {
+    void attach(Action<?> action) {
         boolean loggingEnabled = picasso.loggingEnabled;
         Request request = action.request;
 
@@ -548,7 +548,7 @@ class BitmapHunter implements Runnable {
         }
     }
 
-    void detach(Action action) {
+    void detach(Action<?> action) {
         boolean detached = false;
         if (this.action == action) {
             this.action = null;
@@ -632,7 +632,7 @@ class BitmapHunter implements Runnable {
         return data;
     }
 
-    Action getAction() {
+    Action<?> getAction() {
         return action;
     }
 
@@ -640,7 +640,7 @@ class BitmapHunter implements Runnable {
         return picasso;
     }
 
-    List<Action> getActions() {
+    List<Action<?>> getActions() {
         return actions;
     }
 

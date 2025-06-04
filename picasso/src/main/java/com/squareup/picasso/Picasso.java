@@ -84,7 +84,7 @@ public class Picasso {
                     break;
                 }
                 case REQUEST_GCED: {
-                    Action action = (Action) msg.obj;
+                    Action<?> action = (Action<?>) msg.obj;
                     if (action.getPicasso().loggingEnabled) {
                         log(OWNER_MAIN, VERB_CANCELED, action.request.logId(), "target got garbage collected");
                     }
@@ -92,9 +92,9 @@ public class Picasso {
                     break;
                 }
                 case REQUEST_BATCH_RESUME:
-                    @SuppressWarnings("unchecked") List<Action> batch = (List<Action>) msg.obj;
+                    @SuppressWarnings("unchecked") List<Action<?>> batch = (List<Action<?>>) msg.obj;
                     for (int i = 0, n = batch.size(); i < n; i++) {
-                        Action action = batch.get(i);
+                        Action<?> action = batch.get(i);
                         action.picasso.resumeAction(action);
                     }
                     break;
@@ -109,7 +109,7 @@ public class Picasso {
     final Dispatcher dispatcher;
     final Cache cache;
     final Stats stats;
-    final Map<Object, Action> targetToAction;
+    final Map<Object, Action<?>> targetToAction;
     final Map<ImageView, DeferredRequestCreator> targetToDeferredRequestCreator;
     final ReferenceQueue<Object> referenceQueue;
     final Bitmap.Config defaultBitmapConfig;
@@ -154,7 +154,7 @@ public class Picasso {
         this.indicatorsEnabled = indicatorsEnabled;
         this.loggingEnabled = loggingEnabled;
         this.referenceQueue = new ReferenceQueue<>();
-        this.cleanupThread = new CleanupThread(referenceQueue, HANDLER);
+        this.cleanupThread = new CleanupThread(referenceQueue);
         this.cleanupThread.start();
     }
 
@@ -238,9 +238,9 @@ public class Picasso {
     public void cancelTag(@NonNull Object tag) {
         checkMain();
 
-        List<Action> actions = new ArrayList<>(targetToAction.values());
+        List<Action<?>> actions = new ArrayList<>(targetToAction.values());
         for (int i = 0, n = actions.size(); i < n; i++) {
-            Action action = actions.get(i);
+            Action<?> action = actions.get(i);
             if (tag.equals(action.getTag())) {
                 cancelExistingRequest(action.getTarget());
             }
@@ -490,8 +490,8 @@ public class Picasso {
     }
 
     void complete(BitmapHunter hunter) {
-        Action single = hunter.getAction();
-        List<Action> joined = hunter.getActions();
+        Action<?> single = hunter.getAction();
+        List<Action<?>> joined = hunter.getActions();
 
         boolean hasMultiple = joined != null && !joined.isEmpty();
         boolean shouldDeliver = single != null || hasMultiple;
@@ -511,7 +511,7 @@ public class Picasso {
 
         if (hasMultiple) {
             for (int i = 0, n = joined.size(); i < n; i++) {
-                Action join = joined.get(i);
+                Action<?> join = joined.get(i);
                 deliverAction(result, from, join, exception);
             }
         }
@@ -521,7 +521,7 @@ public class Picasso {
         }
     }
 
-    void resumeAction(Action action) {
+    void resumeAction(Action<?> action) {
         Bitmap bitmap = null;
         if (shouldReadFromMemoryCache(action.memoryPolicy)) {
             bitmap = quickMemoryCacheCheck(action.getKey());
@@ -542,7 +542,7 @@ public class Picasso {
         }
     }
 
-    private void deliverAction(Bitmap result, LoadedFrom from, Action action, Exception e) {
+    private void deliverAction(Bitmap result, LoadedFrom from, Action<?> action, Exception e) {
         if (action.isCancelled()) {
             return;
         }
@@ -567,7 +567,7 @@ public class Picasso {
 
     void cancelExistingRequest(Object target) {
         checkMain();
-        Action action = targetToAction.remove(target);
+        Action<?> action = targetToAction.remove(target);
         if (action != null) {
             action.cancel();
             dispatcher.dispatchCancel(action);
@@ -647,9 +647,9 @@ public class Picasso {
         private final ReferenceQueue<Object> referenceQueue;
         private final Handler handler;
 
-        CleanupThread(ReferenceQueue<Object> referenceQueue, Handler handler) {
+        CleanupThread(ReferenceQueue<Object> referenceQueue) {
             this.referenceQueue = referenceQueue;
-            this.handler = handler;
+            this.handler = Picasso.HANDLER;
             setDaemon(true);
             setName(THREAD_PREFIX + "refQueue");
         }
@@ -836,7 +836,7 @@ public class Picasso {
 
             Stats stats = new Stats(cache);
 
-            Dispatcher dispatcher = new Dispatcher(context, service, HANDLER, downloader, cache, stats);
+            Dispatcher dispatcher = new Dispatcher(context, service, downloader, cache, stats);
 
             return new Picasso(context, dispatcher, cache, listener, transformer, requestHandlers, stats, defaultBitmapConfig, indicatorsEnabled, loggingEnabled);
         }

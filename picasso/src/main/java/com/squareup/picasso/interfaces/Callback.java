@@ -21,7 +21,6 @@ public interface Callback {
     void onError(Exception e);
 
     class EmptyCallback implements Callback {
-
         @Override
         public void onSuccess() {
         }

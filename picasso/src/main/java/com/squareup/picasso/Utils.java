@@ -138,11 +138,11 @@ final class Utils {
 
     static String getLogIdsForHunter(BitmapHunter hunter, String prefix) {
         StringBuilder builder = new StringBuilder(prefix);
-        Action action = hunter.getAction();
+        Action<?> action = hunter.getAction();
         if (action != null) {
             builder.append(action.request.logId());
         }
-        List<Action> actions = hunter.getActions();
+        List<Action<?>> actions = hunter.getActions();
         if (actions != null) {
             for (int i = 0, count = actions.size(); i < count; i++) {
                 if (i > 0 || action != null) builder.append(", ");
@@ -260,8 +260,8 @@ final class Utils {
         return (T) context.getSystemService(service);
     }
 
-    static boolean hasPermission(Context context, String permission) {
-        return context.checkCallingOrSelfPermission(permission) == PackageManager.PERMISSION_GRANTED;
+    static boolean hasNetworkStatePermission(Context context) {
+        return context.checkCallingOrSelfPermission(android.Manifest.permission.ACCESS_NETWORK_STATE) == PackageManager.PERMISSION_GRANTED;
     }
 
     static boolean isWebPFile(BufferedSource source) throws IOException {
