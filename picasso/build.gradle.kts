@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
+    id("maven-publish")
 }
 
 android {
@@ -31,4 +32,20 @@ dependencies {
     implementation(libs.material)
     implementation(libs.okhttp)
     implementation(libs.exifinterface)
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            register<MavenPublication>("release") {
+                groupId = "com.github.Jumman04"
+                artifactId = "Jummania-Slider"
+                version = "4.7"
+
+                afterEvaluate {
+                    artifact(tasks.getByName("bundleReleaseAar"))
+                }
+            }
+        }
+    }
 }
