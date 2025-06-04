@@ -73,6 +73,7 @@ class NetworkRequestHandler extends RequestHandler {
         okhttp3.Request downloaderRequest = createRequest(request, networkPolicy);
         Response response = downloader.load(downloaderRequest);
         ResponseBody body = response.body();
+        if (body == null) return null;
 
         if (!response.isSuccessful()) {
             body.close();

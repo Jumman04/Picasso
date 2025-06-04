@@ -83,9 +83,9 @@ class PicassoExecutorService extends ThreadPoolExecutor {
 
     @Override
     public Future<?> submit(Runnable task) {
-        PicassoFutureTask ftask = new PicassoFutureTask((BitmapHunter) task);
-        execute(ftask);
-        return ftask;
+        PicassoFutureTask picassoTask = new PicassoFutureTask((BitmapHunter) task);
+        execute(picassoTask);
+        return picassoTask;
     }
 
     private static final class PicassoFutureTask extends FutureTask<BitmapHunter> implements Comparable<PicassoFutureTask> {

@@ -423,7 +423,7 @@ public class RequestCreator {
         Request finalData = createRequest(started);
         String key = createKey(finalData, new StringBuilder());
 
-        Action action = new GetAction(picasso, finalData, memoryPolicy, networkPolicy, tag, key);
+        Action<Void> action = new GetAction(picasso, finalData, memoryPolicy, networkPolicy, tag, key);
         return forRequest(picasso, picasso.dispatcher, picasso.cache, picasso.stats, action).hunt();
     }
 
@@ -474,7 +474,7 @@ public class RequestCreator {
                 }
             }
 
-            Action action = new FetchAction(picasso, request, memoryPolicy, networkPolicy, tag, key, callback);
+            Action<Object> action = new FetchAction(picasso, request, memoryPolicy, networkPolicy, tag, key, callback);
             picasso.submit(action);
         }
     }
@@ -552,7 +552,7 @@ public class RequestCreator {
 
         target.onPrepareLoad(setPlaceholder ? getPlaceholderDrawable() : null);
 
-        Action action = new TargetAction(picasso, target, request, memoryPolicy, networkPolicy, errorDrawable, requestKey, tag, errorResId);
+        Action<Target> action = new TargetAction(picasso, target, request, memoryPolicy, networkPolicy, errorDrawable, requestKey, tag, errorResId);
         picasso.enqueueAndSubmit(action);
     }
 
@@ -697,7 +697,7 @@ public class RequestCreator {
             setPlaceholder(target, getPlaceholderDrawable());
         }
 
-        Action action = new ImageViewAction(picasso, target, request, memoryPolicy, networkPolicy, errorResId, errorDrawable, requestKey, tag, callback, noFade);
+        Action<ImageView> action = new ImageViewAction(picasso, target, request, memoryPolicy, networkPolicy, errorResId, errorDrawable, requestKey, tag, callback, noFade);
 
         picasso.enqueueAndSubmit(action);
     }

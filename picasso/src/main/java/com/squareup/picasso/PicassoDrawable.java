@@ -83,12 +83,11 @@ final class PicassoDrawable extends BitmapDrawable {
         }
     }
 
-    private static Path getTrianglePath(int x1, int y1, int width) {
+    private static Path getTrianglePath(int xy) {
         final Path path = new Path();
-        path.moveTo(x1, y1);
-        path.lineTo(x1 + width, y1);
-        path.lineTo(x1, y1 + width);
-
+        path.moveTo(0, 0);
+        path.lineTo(xy, 0);
+        path.lineTo(0, xy);
         return path;
     }
 
@@ -147,11 +146,11 @@ final class PicassoDrawable extends BitmapDrawable {
 
     private void drawDebugIndicator(Canvas canvas) {
         DEBUG_PAINT.setColor(WHITE);
-        Path path = getTrianglePath(0, 0, (int) (16 * density));
+        Path path = getTrianglePath((int) (16 * density));
         canvas.drawPath(path, DEBUG_PAINT);
 
         DEBUG_PAINT.setColor(loadedFrom.debugColor);
-        path = getTrianglePath(0, 0, (int) (15 * density));
+        path = getTrianglePath((int) (15 * density));
         canvas.drawPath(path, DEBUG_PAINT);
     }
 }
