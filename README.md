@@ -10,10 +10,22 @@ For more information please see [the website][1]
 Download
 --------
 
-Download the latest AAR from [Maven Central][2] or grab via Gradle:
+## Add it in your root settings.gradle at the end of repositories:
 
 ```groovy
-implementation 'com.squareup.picasso:picasso:2.8'
+    dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        mavenCentral()
+        maven { url 'https://jitpack.io' }
+    }
+}
+```
+
+## Step 2. Add the dependency
+
+```groovy
+implementation 'com.github.Jumman04:picasso:51bc20abe5'
 ```
 
 or Maven:
@@ -21,9 +33,9 @@ or Maven:
 ```xml
 
 <dependency>
-    <groupId>com.squareup.picasso</groupId>
+    <groupId>com.github.Jumman04</groupId>
     <artifactId>picasso</artifactId>
-    <version>2.8</version>
+    <version>51bc20abe5</version>
 </dependency>
 ```
 
