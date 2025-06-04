@@ -23,6 +23,8 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 
+import com.squareup.picasso.interfaces.Cache;
+
 class Stats {
     private static final int CACHE_HIT = 0;
     private static final int CACHE_MISS = 1;

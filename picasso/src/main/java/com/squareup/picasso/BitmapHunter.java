@@ -38,8 +38,10 @@ import static com.squareup.picasso.Utils.log;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
-import android.net.NetworkInfo;
 import android.view.Gravity;
+
+import com.squareup.picasso.interfaces.Cache;
+import com.squareup.picasso.interfaces.Transformation;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -173,7 +175,7 @@ class BitmapHunter implements Runnable {
         Thread.currentThread().setName(builder.toString());
     }
 
-    static BitmapHunter forRequest(Picasso picasso, Dispatcher dispatcher, Cache cache, Stats stats, Action action) {
+    static BitmapHunter forRequest(Picasso picasso, Dispatcher dispatcher, Cache cache, Stats stats, Action<?> action) {
         Request request = action.getRequest();
         List<RequestHandler> requestHandlers = picasso.getRequestHandlers();
 
@@ -318,31 +320,29 @@ class BitmapHunter implements Runnable {
                 float scaleX, scaleY;
                 if (widthRatio > heightRatio) {
                     int newSize = (int) Math.ceil(inHeight * (heightRatio / widthRatio));
-                    if ((data.centerCropGravity & Gravity.TOP) == Gravity.TOP) {
-                        drawY = 0;
-                    } else if ((data.centerCropGravity & Gravity.BOTTOM) == Gravity.BOTTOM) {
-                        drawY = inHeight - newSize;
-                    } else {
-                        drawY = (inHeight - newSize) / 2;
+                    if ((data.centerCropGravity & Gravity.TOP) != Gravity.TOP) {
+                        if ((data.centerCropGravity & Gravity.BOTTOM) == Gravity.BOTTOM) {
+                            drawY = inHeight - newSize;
+                        } else {
+                            drawY = (inHeight - newSize) / 2;
+                        }
                     }
                     drawHeight = newSize;
                     scaleX = widthRatio;
                     scaleY = targetHeight / (float) drawHeight;
                 } else if (widthRatio < heightRatio) {
                     int newSize = (int) Math.ceil(inWidth * (widthRatio / heightRatio));
-                    if ((data.centerCropGravity & Gravity.START) == Gravity.START) {
-                        drawX = 0;
-                    } else if ((data.centerCropGravity & Gravity.END) == Gravity.END) {
-                        drawX = inWidth - newSize;
-                    } else {
-                        drawX = (inWidth - newSize) / 2;
+                    if ((data.centerCropGravity & Gravity.START) != Gravity.START) {
+                        if ((data.centerCropGravity & Gravity.END) == Gravity.END) {
+                            drawX = inWidth - newSize;
+                        } else {
+                            drawX = (inWidth - newSize) / 2;
+                        }
                     }
                     drawWidth = newSize;
                     scaleX = targetWidth / (float) drawWidth;
                     scaleY = heightRatio;
                 } else {
-                    drawX = 0;
-                    drawWidth = inWidth;
                     scaleX = scaleY = heightRatio;
                 }
                 if (shouldResize(onlyScaleDown, inWidth, inHeight, targetWidth, targetHeight)) {
@@ -603,13 +603,13 @@ class BitmapHunter implements Runnable {
         return future != null && future.isCancelled();
     }
 
-    boolean shouldRetry(boolean airplaneMode, NetworkInfo info) {
+    boolean shouldRetry(boolean airplaneMode, boolean isConnected) {
         boolean hasRetries = retryCount > 0;
         if (!hasRetries) {
             return false;
         }
         retryCount--;
-        return requestHandler.shouldRetry(airplaneMode, info);
+        return requestHandler.shouldRetry(airplaneMode, isConnected);
     }
 
     boolean supportsReplay() {

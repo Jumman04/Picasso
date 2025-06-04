@@ -18,7 +18,7 @@ package com.squareup.picasso;
 import static com.squareup.picasso.Picasso.LoadedFrom.DISK;
 import static com.squareup.picasso.Picasso.LoadedFrom.NETWORK;
 
-import android.net.NetworkInfo;
+import com.squareup.picasso.interfaces.Downloader;
 
 import java.io.IOException;
 
@@ -102,8 +102,8 @@ class NetworkRequestHandler extends RequestHandler {
     }
 
     @Override
-    boolean shouldRetry(boolean airplaneMode, NetworkInfo info) {
-        return info == null || info.isConnected();
+    boolean shouldRetry(boolean airplaneMode, boolean isConnected) {
+        return isConnected;
     }
 
     @Override

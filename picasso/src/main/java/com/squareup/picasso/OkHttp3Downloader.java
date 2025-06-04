@@ -20,6 +20,8 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
+import com.squareup.picasso.interfaces.Downloader;
+
 import java.io.File;
 import java.io.IOException;
 

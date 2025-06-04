@@ -27,6 +27,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.Px;
 
 import com.squareup.picasso.Picasso.Priority;
+import com.squareup.picasso.interfaces.Transformation;
 
 import java.util.ArrayList;
 import java.util.List;

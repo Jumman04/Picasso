@@ -20,6 +20,8 @@ import android.graphics.drawable.Drawable;
 
 import androidx.core.content.res.ResourcesCompat;
 
+import com.squareup.picasso.interfaces.Target;
+
 final class TargetAction extends Action<Target> {
 
     TargetAction(Picasso picasso, Target target, Request data, int memoryPolicy, int networkPolicy, Drawable errorDrawable, String key, Object tag, int errorResId) {

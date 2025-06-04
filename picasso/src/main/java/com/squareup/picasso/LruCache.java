@@ -23,6 +23,8 @@ import android.graphics.Bitmap;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.squareup.picasso.interfaces.Cache;
+
 /**
  * A memory cache which uses a least-recently used eviction policy.
  */

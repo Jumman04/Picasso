@@ -23,6 +23,8 @@ import android.widget.ImageView;
 
 import androidx.annotation.VisibleForTesting;
 
+import com.squareup.picasso.interfaces.Callback;
+
 import java.lang.ref.WeakReference;
 
 class DeferredRequestCreator implements OnPreDrawListener, OnAttachStateChangeListener {

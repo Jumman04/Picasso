@@ -18,13 +18,7 @@ package com.squareup.picasso;
 import static android.content.ContentResolver.SCHEME_CONTENT;
 import static android.content.ContentUris.parseId;
 import static android.provider.MediaStore.Images;
-import static android.provider.MediaStore.Images.Thumbnails.FULL_SCREEN_KIND;
-import static android.provider.MediaStore.Images.Thumbnails.MICRO_KIND;
-import static android.provider.MediaStore.Images.Thumbnails.MINI_KIND;
 import static android.provider.MediaStore.Video;
-import static com.squareup.picasso.MediaStoreRequestHandler.PicassoKind.FULL;
-import static com.squareup.picasso.MediaStoreRequestHandler.PicassoKind.MICRO;
-import static com.squareup.picasso.MediaStoreRequestHandler.PicassoKind.MINI;
 import static com.squareup.picasso.Picasso.LoadedFrom.DISK;
 
 import android.content.ContentResolver;
@@ -33,7 +27,9 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.MediaStore;
+import android.util.Size;
 
 import java.io.IOException;
 
@@ -48,12 +44,12 @@ class MediaStoreRequestHandler extends ContentStreamRequestHandler {
     }
 
     static PicassoKind getPicassoKind(int targetWidth, int targetHeight) {
-        if (targetWidth <= MICRO.width && targetHeight <= MICRO.height) {
-            return MICRO;
-        } else if (targetWidth <= MINI.width && targetHeight <= MINI.height) {
-            return MINI;
+        if (targetWidth <= PicassoKind.MICRO.width && targetHeight <= PicassoKind.MICRO.height) {
+            return PicassoKind.MICRO;
+        } else if (targetWidth <= PicassoKind.MINI.width && targetHeight <= PicassoKind.MINI.height) {
+            return PicassoKind.MINI;
         }
-        return FULL;
+        return PicassoKind.FULL;
     }
 
     static int getExifOrientation(ContentResolver contentResolver, Uri uri) {
@@ -63,7 +59,6 @@ class MediaStoreRequestHandler extends ContentStreamRequestHandler {
             }
             return cursor.getInt(0);
         } catch (RuntimeException ignored) {
-            // If the orientation column doesn't exist, assume no rotation.
             return 0;
         }
     }
@@ -71,7 +66,7 @@ class MediaStoreRequestHandler extends ContentStreamRequestHandler {
     @Override
     public boolean canHandleRequest(Request data) {
         final Uri uri = data.uri;
-        return (SCHEME_CONTENT.equals(uri.getScheme()) && MediaStore.AUTHORITY.equals(uri.getAuthority()));
+        return SCHEME_CONTENT.equals(uri.getScheme()) && MediaStore.AUTHORITY.equals(uri.getAuthority());
     }
 
     @Override
@@ -83,28 +78,29 @@ class MediaStoreRequestHandler extends ContentStreamRequestHandler {
         boolean isVideo = mimeType != null && mimeType.startsWith("video/");
 
         if (request.hasSize()) {
-            PicassoKind picassoKind = getPicassoKind(request.targetWidth, request.targetHeight);
-            if (!isVideo && picassoKind == FULL) {
-                Source source = Okio.source(getInputStream(request));
-                return new Result(null, source, DISK, exifOrientation);
-            }
+            PicassoKind kind = getPicassoKind(request.targetWidth, request.targetHeight);
 
-            long id = parseId(request.uri);
-
-            BitmapFactory.Options options = createBitmapOptions(request);
-            options.inJustDecodeBounds = true;
-
-            calculateInSampleSize(request.targetWidth, request.targetHeight, picassoKind.width, picassoKind.height, options, request);
-
-            Bitmap bitmap;
-
-            if (isVideo) {
-                // Since MediaStore doesn't provide the full screen kind thumbnail, we use the mini kind
-                // instead which is the largest thumbnail size can be fetched from MediaStore.
-                int kind = (picassoKind == FULL) ? Video.Thumbnails.MINI_KIND : picassoKind.androidKind;
-                bitmap = Video.Thumbnails.getThumbnail(contentResolver, id, kind, options);
+            Bitmap bitmap = null;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                try {
+                    bitmap = contentResolver.loadThumbnail(request.uri, new Size(kind.width, kind.height), null);
+                } catch (IOException ignored) {
+                }
             } else {
-                bitmap = Images.Thumbnails.getThumbnail(contentResolver, id, picassoKind.androidKind, options);
+                // For older Android versions, fall back to deprecated methods
+                long id = parseId(request.uri);
+                BitmapFactory.Options options = createBitmapOptions(request);
+                options.inJustDecodeBounds = true;
+
+                calculateInSampleSize(request.targetWidth, request.targetHeight, kind.width, kind.height, options, request);
+
+                if (isVideo) {
+                    int legacyKind = (kind == PicassoKind.FULL) ? Video.Thumbnails.MINI_KIND : kind.legacyKind;
+                    bitmap = Video.Thumbnails.getThumbnail(contentResolver, id, legacyKind, options);
+                } else {
+                    int legacyKind = (kind == PicassoKind.FULL) ? Images.Thumbnails.MINI_KIND : kind.legacyKind;
+                    bitmap = Images.Thumbnails.getThumbnail(contentResolver, id, legacyKind, options);
+                }
             }
 
             if (bitmap != null) {
@@ -117,16 +113,17 @@ class MediaStoreRequestHandler extends ContentStreamRequestHandler {
     }
 
     enum PicassoKind {
-        MICRO(MICRO_KIND, 96, 96), MINI(MINI_KIND, 512, 384), FULL(FULL_SCREEN_KIND, -1, -1);
+        MICRO(96, 96, Images.Thumbnails.MICRO_KIND), MINI(512, 384, Images.Thumbnails.MINI_KIND), FULL(-1, -1, Images.Thumbnails.MINI_KIND); // Use MINI_KIND as fallback for FULL
 
-        final int androidKind;
         final int width;
         final int height;
+        final int legacyKind;
 
-        PicassoKind(int androidKind, int width, int height) {
-            this.androidKind = androidKind;
+        PicassoKind(int width, int height, int legacyKind) {
             this.width = width;
             this.height = height;
+            this.legacyKind = legacyKind;
         }
     }
 }
+

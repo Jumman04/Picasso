@@ -23,6 +23,7 @@ import static com.squareup.picasso.Picasso.LoadedFrom.DISK;
 import android.content.Context;
 import android.net.Uri;
 
+import androidx.annotation.NonNull;
 import androidx.exifinterface.media.ExifInterface;
 
 import java.io.IOException;
@@ -36,7 +37,7 @@ class FileRequestHandler extends ContentStreamRequestHandler {
         super(context);
     }
 
-    static int getFileExifRotation(Uri uri) throws IOException {
+    static int getFileExifRotation(@NonNull Uri uri) throws IOException {
         ExifInterface exifInterface = new ExifInterface(uri.getPath());
         return exifInterface.getAttributeInt(TAG_ORIENTATION, ORIENTATION_NORMAL);
     }

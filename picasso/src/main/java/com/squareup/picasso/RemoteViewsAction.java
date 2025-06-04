@@ -24,6 +24,8 @@ import android.appwidget.AppWidgetManager;
 import android.graphics.Bitmap;
 import android.widget.RemoteViews;
 
+import com.squareup.picasso.interfaces.Callback;
+
 abstract class RemoteViewsAction extends Action<RemoteViewsAction.RemoteViewsTarget> {
     final RemoteViews remoteViews;
     final int viewId;

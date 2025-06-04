@@ -19,7 +19,6 @@ import static com.squareup.picasso.Utils.checkNotNull;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.NetworkInfo;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -54,17 +53,18 @@ public abstract class RequestHandler {
         final boolean justBounds = data.hasSize();
         final boolean hasConfig = data.config != null;
         BitmapFactory.Options options = null;
-        if (justBounds || hasConfig || data.purgeable) {
+
+        if (justBounds || hasConfig) {
             options = new BitmapFactory.Options();
             options.inJustDecodeBounds = justBounds;
-            options.inInputShareable = data.purgeable;
-            options.inPurgeable = data.purgeable;
             if (hasConfig) {
                 options.inPreferredConfig = data.config;
             }
         }
+
         return options;
     }
+
 
     static boolean requiresInSampleSize(BitmapFactory.Options options) {
         return options != null && options.inJustDecodeBounds;
@@ -111,7 +111,7 @@ public abstract class RequestHandler {
         return 0;
     }
 
-    boolean shouldRetry(boolean airplaneMode, NetworkInfo info) {
+    boolean shouldRetry(boolean airplaneMode, boolean isConnected) {
         return false;
     }
 

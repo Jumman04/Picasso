@@ -49,6 +49,10 @@ import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.squareup.picasso.interfaces.Cache;
+import com.squareup.picasso.interfaces.Downloader;
+import com.squareup.picasso.interfaces.Target;
+
 import java.io.File;
 import java.lang.ref.ReferenceQueue;
 import java.util.ArrayList;
@@ -461,7 +465,7 @@ public class Picasso {
         targetToDeferredRequestCreator.put(view, request);
     }
 
-    void enqueueAndSubmit(Action action) {
+    void enqueueAndSubmit(Action<?> action) {
         Object target = action.getTarget();
         if (target != null && targetToAction.get(target) != action) {
             // This will also check we are on the main thread.
@@ -471,7 +475,7 @@ public class Picasso {
         submit(action);
     }
 
-    void submit(Action action) {
+    void submit(Action<?> action) {
         dispatcher.dispatchSubmit(action);
     }
 

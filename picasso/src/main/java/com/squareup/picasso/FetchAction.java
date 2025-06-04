@@ -17,6 +17,8 @@ package com.squareup.picasso;
 
 import android.graphics.Bitmap;
 
+import com.squareup.picasso.interfaces.Callback;
+
 class FetchAction extends Action<Object> {
 
     private final Object target;

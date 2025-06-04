@@ -49,6 +49,11 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.appcompat.content.res.AppCompatResources;
 
+import com.squareup.picasso.interfaces.Cache;
+import com.squareup.picasso.interfaces.Callback;
+import com.squareup.picasso.interfaces.Target;
+import com.squareup.picasso.interfaces.Transformation;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -698,7 +703,6 @@ public class RequestCreator {
         }
 
         Action<ImageView> action = new ImageViewAction(picasso, target, request, memoryPolicy, networkPolicy, errorResId, errorDrawable, requestKey, tag, callback, noFade);
-
         picasso.enqueueAndSubmit(action);
     }
 

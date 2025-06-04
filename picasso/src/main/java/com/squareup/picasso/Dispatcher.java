@@ -42,11 +42,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
+
+import com.squareup.picasso.interfaces.Cache;
+import com.squareup.picasso.interfaces.Downloader;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -157,8 +161,8 @@ class Dispatcher {
         handler.sendMessage(handler.obtainMessage(HUNTER_DECODE_FAILED, hunter));
     }
 
-    void dispatchNetworkStateChange(NetworkInfo info) {
-        handler.sendMessage(handler.obtainMessage(NETWORK_STATE_CHANGE, info));
+    void dispatchNetworkStateChange(NetworkCapabilities capabilities) {
+        handler.sendMessage(handler.obtainMessage(NETWORK_STATE_CHANGE, capabilities));
     }
 
     void dispatchAirplaneModeChange(boolean airplaneMode) {
@@ -316,13 +320,16 @@ class Dispatcher {
             return;
         }
 
-        NetworkInfo networkInfo = null;
+        boolean isConnected = true;
+
         if (scansNetworkChanges) {
             ConnectivityManager connectivityManager = getService(context, CONNECTIVITY_SERVICE);
-            networkInfo = connectivityManager.getActiveNetworkInfo();
+            Network network = connectivityManager.getActiveNetwork();
+            NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
+            isConnected = capabilities != null && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
         }
 
-        if (hunter.shouldRetry(airplaneMode, networkInfo)) {
+        if (hunter.shouldRetry(airplaneMode, isConnected)) {
             if (hunter.getPicasso().loggingEnabled) {
                 log(OWNER_DISPATCHER, VERB_RETRYING, getLogIdsForHunter(hunter));
             }
@@ -331,7 +338,6 @@ class Dispatcher {
             }
             hunter.future = service.submit(hunter);
         } else {
-            // Mark for replay only if we observe network info changes and support replay.
             boolean willReplay = scansNetworkChanges && hunter.supportsReplay();
             performError(hunter, willReplay);
             if (willReplay) {
@@ -339,6 +345,7 @@ class Dispatcher {
             }
         }
     }
+
 
     void performComplete(BitmapHunter hunter) {
         if (shouldWriteToMemoryCache(hunter.getMemoryPolicy())) {
@@ -370,12 +377,14 @@ class Dispatcher {
         this.airplaneMode = airplaneMode;
     }
 
-    void performNetworkStateChange(NetworkInfo info) {
+    void performNetworkStateChange(NetworkCapabilities capabilities) {
         if (service instanceof PicassoExecutorService) {
-            ((PicassoExecutorService) service).adjustThreadCount(info);
+            ((PicassoExecutorService) service).adjustThreadCount(context, capabilities);
         }
         // Intentionally check only if isConnected() here before we flush out failed actions.
-        if (info != null && info.isConnected()) {
+
+        boolean isConnected = capabilities != null && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        if (isConnected) {
             flushFailedActions();
         }
     }
@@ -494,8 +503,8 @@ class Dispatcher {
                     break;
                 }
                 case NETWORK_STATE_CHANGE: {
-                    NetworkInfo info = (NetworkInfo) msg.obj;
-                    dispatcher.performNetworkStateChange(info);
+                    NetworkCapabilities capabilities = (NetworkCapabilities) msg.obj;
+                    dispatcher.performNetworkStateChange(capabilities);
                     break;
                 }
                 case AIRPLANE_MODE_CHANGE: {
@@ -541,21 +550,23 @@ class Dispatcher {
         @SuppressLint("MissingPermission")
         @Override
         public void onReceive(Context context, Intent intent) {
-            // On some versions of Android this may be called with a null Intent,
-            // also without extras (getExtras() == null), in such case we use defaults.
             if (intent == null) {
                 return;
             }
+
             final String action = intent.getAction();
             if (ACTION_AIRPLANE_MODE_CHANGED.equals(action)) {
                 if (!intent.hasExtra(EXTRA_AIRPLANE_STATE)) {
-                    return; // No airplane state, ignore it. Should we query Utils.isAirplaneModeOn?
+                    return;
                 }
                 dispatcher.dispatchAirplaneModeChange(intent.getBooleanExtra(EXTRA_AIRPLANE_STATE, false));
             } else if (CONNECTIVITY_ACTION.equals(action)) {
                 ConnectivityManager connectivityManager = getService(context, CONNECTIVITY_SERVICE);
-                dispatcher.dispatchNetworkStateChange(connectivityManager.getActiveNetworkInfo());
+                Network network = connectivityManager.getActiveNetwork();
+                NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
+                dispatcher.dispatchNetworkStateChange(capabilities);
             }
         }
     }
+
 }

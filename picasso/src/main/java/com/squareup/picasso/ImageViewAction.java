@@ -21,6 +21,8 @@ import android.graphics.drawable.Animatable;
 import android.graphics.drawable.Drawable;
 import android.widget.ImageView;
 
+import com.squareup.picasso.interfaces.Callback;
+
 class ImageViewAction extends Action<ImageView> {
 
     Callback callback;

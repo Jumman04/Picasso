@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.picasso;
+package com.squareup.picasso.interfaces;
 
 import static com.squareup.picasso.Picasso.LoadedFrom;
 
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+
+import com.squareup.picasso.RequestCreator;
 
 /**
  * Represents an arbitrary listener for image loading.
