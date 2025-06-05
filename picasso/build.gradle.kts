@@ -29,9 +29,9 @@ android {
 }
 
 dependencies {
-    implementation("com.google.android.material:material:1.12.0")
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("androidx.exifinterface:exifinterface:1.4.1")
+    implementation(libs.material)
+    implementation(libs.okhttp)
+    implementation(libs.exifinterface)
 }
 
 publishing {
@@ -43,6 +43,19 @@ publishing {
 
             afterEvaluate {
                 artifact(tasks.getByName("bundleReleaseAar"))
+            }
+
+            // Include dependencies in the generated POM
+            pom.withXml {
+                val dependenciesNode = asNode().appendNode("dependencies")
+                configurations.implementation.get().allDependencies.forEach {
+                    if (it.group != null && it.version != null) {
+                        val dependencyNode = dependenciesNode.appendNode("dependency")
+                        dependencyNode.appendNode("groupId", it.group)
+                        dependencyNode.appendNode("artifactId", it.name)
+                        dependencyNode.appendNode("version", it.version)
+                    }
+                }
             }
         }
     }
