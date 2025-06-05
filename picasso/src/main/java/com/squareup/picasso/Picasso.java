@@ -301,7 +301,6 @@ public class Picasso {
      * Passing {@code null} as a {@code path} will not trigger any request but will set a
      * placeholder, if one is specified.
      *
-     * @throws IllegalArgumentException if {@code path} is empty or blank string.
      * @see #load(Uri)
      * @see #load(File)
      * @see #load(int)
@@ -338,9 +337,6 @@ public class Picasso {
      * @see #load(File)
      */
     public RequestCreator load(@DrawableRes int resourceId) {
-        if (resourceId == 0) {
-            throw new IllegalArgumentException("Resource ID must not be zero.");
-        }
         return new RequestCreator(this, null, resourceId);
     }
 
