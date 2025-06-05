@@ -25,9 +25,6 @@
             android:exported="false" />
 
         <activity
-            android:name=".PicassoSampleActivity"
-            android:exported="false" />
-        <activity
             android:name=".SampleGridViewActivity"
             android:exported="true">
             <intent-filter>

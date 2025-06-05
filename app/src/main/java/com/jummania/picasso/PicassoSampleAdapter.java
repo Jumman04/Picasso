@@ -102,7 +102,6 @@ final class PicassoSampleAdapter extends BaseAdapter {
             if (activityClass != null) {
                 Intent intent = new Intent(activity, activityClass);
                 activity.startActivity(intent);
-                activity.finish();
             }
         }
 
