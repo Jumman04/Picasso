@@ -34,17 +34,15 @@ dependencies {
     implementation(libs.exifinterface)
 }
 
-afterEvaluate {
-    publishing {
-        publications {
-            register<MavenPublication>("release") {
-                groupId = "com.github.Jumman04"
-                artifactId = "Jummania-Slider"
-                version = "4.7"
+publishing {
+    publications {
+        register<MavenPublication>("release") {
+            groupId = "com.github.Jumman04"
+            artifactId = "picasso"
+            version = "1.0.0"
 
-                afterEvaluate {
-                    artifact(tasks.getByName("bundleReleaseAar"))
-                }
+            afterEvaluate {
+                artifact(tasks.getByName("bundleReleaseAar"))
             }
         }
     }

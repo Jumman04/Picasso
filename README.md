@@ -3,71 +3,60 @@ Picasso
 
 A powerful image downloading and caching library for Android
 
-![](https://raw.githubusercontent.com/Jumman04/picasso-kotlin/refs/heads/master/website/static/sample.png)
+![Sample](https://raw.githubusercontent.com/Jumman04/picasso-kotlin/refs/heads/master/website/static/sample.png)
 
-For more information please see [the website][1]
+For more information, please see [the website][1].
 
 Download
 --------
 
-## Add it in your root settings.gradle at the end of repositories:
+### Step 1. Add this to your `settings.gradle` (or `settings.gradle.kts`):
 
 ```groovy
-    dependencyResolutionManagement {
+dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         mavenCentral()
         maven { url 'https://jitpack.io' }
     }
 }
-```
+````
 
-## Step 2. Add the dependency
+### Step 2. Add the dependency
+
+**Gradle:**
 
 ```groovy
 implementation 'com.github.Jumman04:picasso:51bc20abe5'
 ```
 
-or Maven:
+> Snapshots of the development version are available in [Sonatype's snapshots repository][snap].
 
-```xml
+⚙️ **Picasso requires Java 8+ and Android API 24+.**
 
-<dependency>
-    <groupId>com.github.Jumman04</groupId>
-    <artifactId>picasso</artifactId>
-    <version>51bc20abe5</version>
-</dependency>
-```
+---
 
-Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
+## ProGuard
 
-Picasso requires at minimum Java 8 and API 24.
+If you are using ProGuard, you might need to add OkHttp's rules:
+👉 [https://github.com/square/okhttp/#r8--proguard](https://github.com/square/okhttp/#r8--proguard)
 
+---
 
-ProGuard
---------
+## ❤️ About This Fork
 
-If you are using ProGuard you might need to add OkHttp's
-rules: https://github.com/square/okhttp/#r8--proguard
+This is a **community-maintained fork** of the original [Picasso](https://github.com/square/picasso)
+library by [Square, Inc.](https://squareup.com/).
 
+> All credit and appreciation go to the original creators —
+> we just removed deprecated Android APIs to make the library compatible with the latest Android
+> versions (API 24 to 36+).
 
+📌 **Note:** No core logic has been modified.
+This fork simply updates deprecated methods to keep Picasso alive and usable in modern Android
+projects.
 
-License
---------
-
-    Copyright 2013 Square, Inc.
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-       https://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
+---
 
 [1]: https://square.github.io/picasso/
 
