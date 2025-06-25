@@ -15,12 +15,7 @@
  */
 package com.squareup.picasso;
 
-import android.annotation.SuppressLint;
-import android.content.Context;
 import android.net.NetworkCapabilities;
-import android.telephony.TelephonyManager;
-
-import androidx.core.content.ContextCompat;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
@@ -41,9 +36,7 @@ class PicassoExecutorService extends ThreadPoolExecutor {
         super(DEFAULT_THREAD_COUNT, DEFAULT_THREAD_COUNT, 0, TimeUnit.MILLISECONDS, new PriorityBlockingQueue<>(), new Utils.PicassoThreadFactory());
     }
 
-    void adjustThreadCount(Context context, NetworkCapabilities capabilities) {
-
-        TelephonyManager tm = ContextCompat.getSystemService(context, TelephonyManager.class);
+    void adjustThreadCount(NetworkCapabilities capabilities) {
         if (capabilities == null || !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
             setThreadCount(DEFAULT_THREAD_COUNT);
             return;
@@ -52,38 +45,8 @@ class PicassoExecutorService extends ThreadPoolExecutor {
         if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI_AWARE)) {
             setThreadCount(4);
         } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-
-            if (tm == null) {
-                setThreadCount(DEFAULT_THREAD_COUNT);
-                return;
-            }
-
-            @SuppressLint("MissingPermission") int networkType = tm.getDataNetworkType(); // returns subtype equivalent
-
-            switch (networkType) {
-                case TelephonyManager.NETWORK_TYPE_LTE:     // 4G
-                case TelephonyManager.NETWORK_TYPE_HSPAP:
-                case TelephonyManager.NETWORK_TYPE_EHRPD:
-                    setThreadCount(3);
-                    break;
-
-                case TelephonyManager.NETWORK_TYPE_UMTS:     // 3G
-                case TelephonyManager.NETWORK_TYPE_CDMA:
-                case TelephonyManager.NETWORK_TYPE_EVDO_0:
-                case TelephonyManager.NETWORK_TYPE_EVDO_A:
-                case TelephonyManager.NETWORK_TYPE_EVDO_B:
-                    setThreadCount(2);
-                    break;
-
-                case TelephonyManager.NETWORK_TYPE_GPRS:     // 2G
-                case TelephonyManager.NETWORK_TYPE_EDGE:
-                    setThreadCount(1);
-                    break;
-
-                default:
-                    setThreadCount(DEFAULT_THREAD_COUNT);
-                    break;
-            }
+            // Instead of checking 2G/3G/4G/5G, just use a balanced default
+            setThreadCount(2);
         } else {
             setThreadCount(DEFAULT_THREAD_COUNT);
         }

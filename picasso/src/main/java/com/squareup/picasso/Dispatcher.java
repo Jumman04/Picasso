@@ -378,7 +378,7 @@ class Dispatcher {
 
     void performNetworkStateChange(NetworkCapabilities capabilities) {
         if (service instanceof PicassoExecutorService) {
-            ((PicassoExecutorService) service).adjustThreadCount(context, capabilities);
+            ((PicassoExecutorService) service).adjustThreadCount(capabilities);
         }
         // Intentionally check only if isConnected() here before we flush out failed actions.
 
